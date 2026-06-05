@@ -8,82 +8,121 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&display=swap');
         
-        body { 
-            background: #000; 
-            color: #fff; 
-            font-family: 'Space Grotesk', sans-serif; 
-            margin: 0; 
-            overflow: hidden; 
+        body { background: #000; color: #fff; font-family: 'Space Grotesk', sans-serif; margin: 0; overflow: hidden; }
+
+        /* Feed */
+        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .slide { 
+            height: 100vh; scroll-snap-align: start; 
+            display: flex; align-items: center; justify-content: center; 
+            background: #111; border-bottom: 1px solid #222; 
+            position: relative;
         }
 
-        /* Feed-Design */
-        .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .slide { height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; background: #111; color: #666; }
+        /* Maintenance Mode - Gelb/Schwarz Gestreift */
+        .maintenance-overlay {
+            position: fixed; inset: 0; z-index: 1000; display: none;
+            background-color: #FFD700;
+            background-image: repeating-linear-gradient(45deg, #000 0, #000 20px, #FFD700 20px, #FFD700 40px);
+            justify-content: center; align-items: center;
+        }
+        .maintenance-text { font-size: 3rem; font-weight: bold; color: #000; text-transform: uppercase; }
 
         /* Navigation */
-        .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; 
-            background: #000; border-top: 1px solid #222; 
-            display: flex; justify-content: space-around; align-items: center; z-index: 100; 
-        }
-        .nav-btn { background: none; border: none; cursor: pointer; padding: 10px; }
-        .nav-icon { width: 28px; height: 28px; fill: white; }
-        .plus-btn { background: #fff; color: #000; width: 40px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .nav-btn { background: none; border: none; cursor: pointer; padding: 10px; fill: white; width: 28px; height: 28px; }
+        .plus-btn { background: #fff; color: #000; width: 40px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; cursor: pointer; }
 
-        /* Modals */
-        .modal { display: none; position: fixed; inset: 0; background: #000; z-index: 200; padding: 20px; }
+        /* Video Styling */
+        video { width: 100%; height: 100%; object-fit: cover; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: #000; z-index: 500; padding: 20px; }
     </style>
 </head>
 <body>
 
+    <!-- WARTUNGSMODUS -->
+    <div id="maintenance-screen" class="maintenance-overlay">
+        <div class="maintenance-text">Maintenance</div>
+    </div>
+
     <!-- FEED -->
     <div id="feed" class="feed">
-        <div class="slide">PigeonTok Feed</div>
+        <div class="slide">Willkommen bei PigVin</div>
     </div>
 
     <!-- NAVIGATION -->
     <nav class="bottom-nav">
-        <button class="nav-btn" onclick="window.location.reload()"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
-        <button class="nav-btn" onclick="document.getElementById('search-panel').style.display='block'"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z"/></svg></button>
-        <button class="plus-btn" onclick="document.getElementById('video-input').click()">+</button>
-        <button class="nav-btn" onclick="document.getElementById('admin-panel').style.display='block'"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></button>
+        <button class="nav-btn" onclick="window.location.reload()"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+        <button class="nav-btn" onclick="document.getElementById('search-panel').style.display='block'"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5z"/></svg></button>
+        <div class="plus-btn" onclick="document.getElementById('video-input').click()">+</div>
+        <button class="nav-btn" onclick="document.getElementById('admin-panel').style.display='block'"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></button>
     </nav>
 
     <!-- SUCHE -->
     <div id="search-panel" class="modal">
         <input type="text" id="search-input" placeholder="Suche..." class="w-full bg-zinc-900 p-4 rounded text-white mb-4">
-        <button onclick="this.parentElement.style.display='none'">Zurück</button>
+        <button onclick="document.getElementById('search-panel').style.display='none'" class="text-zinc-500">Zurück</button>
     </div>
 
     <!-- ADMIN -->
     <div id="admin-panel" class="modal">
-        <h2 class="text-2xl font-bold">Admin Panel (ymtmanuel)</h2>
+        <h2 class="text-2xl font-bold">Admin Panel</h2>
         <button onclick="this.parentElement.style.display='none'" class="text-zinc-500 my-4">Schließen</button>
-        <button onclick="alert('Wartungsmodus aktiv')" class="w-full bg-red-600 p-3 rounded font-bold">Wartungsmodus</button>
+        <button onclick="toggleMaintenance()" class="w-full bg-red-600 p-3 rounded font-bold">Wartungsmodus Umschalten</button>
     </div>
 
     <input type="file" id="video-input" class="hidden" accept="video/*">
 
     <script>
         const banned = ["isis", "1s1s", "is", "1s", "ah", "adolf h.", "nigger", "gore", "nga", "nigga", "1312", "acab", "efn epstein"];
+        const feed = document.getElementById('feed');
 
-        // Such-Logik
-        document.getElementById('search-input').oninput = (e) => {
-            if(banned.includes(e.target.value.toLowerCase())) {
-                alert("Achtung! Diese Wörter sind verboten.");
-                e.target.value = "";
-            }
-        };
-
-        // Upload-Logik
+        // UPLOAD & FEED-LOGIK
         document.getElementById('video-input').onchange = (e) => {
-            const desc = prompt("Beschreibung:");
-            if(desc && banned.some(w => desc.toLowerCase().includes(w))) {
-                alert("Achtung: Verbotene Inhalte erkannt. Video blockiert.");
-            } else if(desc) {
-                alert("Video hochgeladen!");
-            }
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            
+            video.onloadedmetadata = function() {
+                window.URL.revokeObjectURL(this.src);
+                
+                // 6 Sekunden Limit
+                if (this.duration > 6.1) {
+                    alert("Achtung: Video zu lang! Max 6 Sekunden.");
+                } else {
+                    const desc = prompt("Beschreibung:");
+                    if (desc && banned.some(w => desc.toLowerCase().includes(w))) {
+                        alert("Achtung: Verbotene Inhalte.");
+                    } else {
+                        // Neues Video zum Feed hinzufügen
+                        const newSlide = document.createElement('div');
+                        newSlide.className = 'slide';
+                        
+                        const vidEl = document.createElement('video');
+                        vidEl.src = URL.createObjectURL(file);
+                        vidEl.autoplay = true;
+                        vidEl.loop = true;
+                        vidEl.muted = true;
+                        
+                        newSlide.appendChild(vidEl);
+                        feed.appendChild(newSlide);
+                        
+                        // Direkt zum Video scrollen
+                        newSlide.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            };
+            video.src = URL.createObjectURL(file);
         };
+
+        // WARTUNGSMODUS TOGGLE
+        function toggleMaintenance() {
+            const screen = document.getElementById('maintenance-screen');
+            screen.style.display = (screen.style.display === 'flex') ? 'none' : 'flex';
+        }
     </script>
 </body>
 </html>
