@@ -2,26 +2,24 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PigVin - Admin Edition</title>
+    <title>PigVin - Admin Panel</title>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; }
         #feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .video-slide { height: 100vh; scroll-snap-align: start; position: relative; border-bottom: 2px solid #333; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .controls { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
-        input { padding: 15px; width: 250px; border-radius: 5px; border: none; }
-        button { padding: 15px; background: #fff; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        .slide { height: 100vh; scroll-snap-align: start; border-bottom: 2px solid #222; display: flex; align-items: center; justify-content: center; position: relative; }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        .panel { position: fixed; bottom: 20px; left: 20px; background: #111; padding: 20px; border: 2px solid #fff; z-index: 1000; }
+        input { background: #000; color: #fff; border: 1px solid #555; padding: 10px; width: 300px; }
+        button { background: #fff; color: #000; padding: 10px 20px; font-weight: bold; cursor: pointer; border: none; }
     </style>
 </head>
 <body>
 
-    <!-- Feed Bereich -->
     <div id="feed"></div>
 
-    <!-- Post Bereich -->
-    <div class="controls">
-        <input type="text" id="urlInput" placeholder="MP4 Link hier einfügen...">
+    <!-- Admin Panel -->
+    <div class="panel">
+        <input type="text" id="vUrl" placeholder="Video MP4 Link einfügen...">
         <button onclick="postVideo()">POSTEN</button>
     </div>
 
@@ -31,32 +29,37 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
+            authDomain: "pigeon-1e2cd.firebaseapp.com",
             databaseURL: "https://pigeon-1e2cd-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "pigeon-1e2cd"
+            projectId: "pigeon-1e2cd",
+            storageBucket: "pigeon-1e2cd.firebasestorage.app",
+            messagingSenderId: "538627864447",
+            appId: "1:538627864447:web:8f917799e135b889bd4c4a",
+            measurementId: "G-0F13EEQ4EQ"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Video posten
+        // Posten
         window.postVideo = () => {
-            const url = document.getElementById('urlInput').value;
-            if(!url) return alert("Link fehlt!");
+            const url = document.getElementById('vUrl').value;
+            if(!url) return;
             push(ref(db, 'videos'), { url: url });
-            document.getElementById('urlInput').value = "";
-            alert("Video ist online!");
+            document.getElementById('vUrl').value = "";
+            alert("Erfolgreich!");
         };
 
-        // Feed live laden
+        // Feed anzeigen
         const feed = document.getElementById('feed');
         onValue(ref(db, 'videos'), (snapshot) => {
-            feed.innerHTML = ""; 
+            feed.innerHTML = "";
             const data = snapshot.val();
-            if (data) {
-                Object.values(data).forEach((video) => {
+            if(data) {
+                Object.values(data).forEach(v => {
                     feed.innerHTML += `
-                        <div class="video-slide">
-                            <video src="${video.url}" autoplay loop muted playsinline></video>
+                        <div class="slide">
+                            <video src="${v.url}" autoplay loop muted playsinline></video>
                         </div>`;
                 });
             }
