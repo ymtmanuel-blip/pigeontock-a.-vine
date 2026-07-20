@@ -3,603 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ymt Loops & Posts</title>
-    <!-- Google Fonts: Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Firebase Firestore SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <title>Sichere Video & Foto App</title>
+
+    <!-- TensorFlow.js & NSFW Model (KI Scanner) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.1/dist/nsfwjs.min.js"></script>
 
     <style>
-        :root {
-            --bg-color: #0b0c10;
-            --card-bg: rgba(22, 24, 34, 0.7);
-            --accent-color: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.3);
-            --danger-color: #ff3366;
-            --text-color: #f0f2f5;
-            --verified-color: #00d2ff;
-            --border-color: rgba(255, 255, 255, 0.08);
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% 0%, #1a1c2e 0%, #0b0c10 70%);
-            color: var(--text-color);
+            background-color: #121212;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding-bottom: 40px;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, #00ff88, #00d2ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .logo-icon {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #00ff88, #00d2ff);
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            font-size: 0.9rem;
-            font-weight: 900;
-            -webkit-text-fill-color: initial;
+            padding-bottom: 80px;
         }
 
         header {
             width: 100%;
-            max-width: 500px;
-            padding: 16px 20px;
+            padding: 15px 20px;
+            background: #1f1f1f;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(11, 12, 16, 0.8);
-            backdrop-filter: blur(16px);
+            border-bottom: 1px solid #333;
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid var(--border-color);
         }
 
-        button {
-            cursor: pointer;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
+        h1 {
+            font-size: 1.2rem;
+            color: #00ff88;
         }
 
-        button:active {
-            transform: scale(0.96);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #00ff88, #00c868);
+        .btn {
+            background: #00ff88;
             color: #000;
-            box-shadow: 0 4px 15px var(--accent-glow);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
         }
 
-        .btn-danger {
-            background: var(--danger-color);
-            color: #fff;
+        .btn:disabled {
+            cursor: not-allowed;
         }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-        }
-
-        main {
+        #feed {
             width: 100%;
             max-width: 500px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            padding: 20px 10px;
         }
 
-        .loop-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
+        .card {
+            background: #1f1f1f;
+            border-radius: 12px;
             overflow: hidden;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid #333;
         }
 
-        .media-container {
-            width: 100%;
-            background: #000;
-            position: relative;
+        .card-header {
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #2a2a2a;
         }
 
-        video, img.post-img {
+        .card-body media, .card-body img, .card-body video {
             width: 100%;
-            max-height: 500px;
+            max-height: 400px;
+            object-fit: cover;
             display: block;
-            object-fit: contain;
+            background: #000;
         }
 
-        .loop-info {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .loop-header {
+        .card-footer {
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .loop-author {
-            font-weight: 600;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #aaa;
-        }
-
-        .verified-badge {
-            color: var(--verified-color);
-            font-size: 1.1rem;
-        }
-
-        .loop-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
             align-items: center;
         }
 
         .like-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: transparent;
+            border: 1px solid #444;
             color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 6px 14px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
         }
 
         .like-btn.liked {
-            background: rgba(255, 51, 102, 0.2);
-            border-color: var(--danger-color);
-            color: var(--danger-color);
+            background: #ff3366;
+            border-color: #ff3366;
         }
 
-        /* --- KOMMENTAR-STYLING (EINKLAPPBAR) --- */
-        .comments-section {
-            border-top: 1px solid var(--border-color);
-            padding-top: 10px;
-            margin-top: 6px;
-            display: none; /* Standardmäßig ausgeblendet */
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .comment-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-
-        .comment-item {
-            font-size: 0.85rem;
-            background: rgba(0,0,0,0.25);
-            padding: 6px 10px;
-            border-radius: 8px;
-            word-break: break-word;
-        }
-
-        .comment-user {
-            color: var(--accent-color);
-            font-weight: 600;
-            margin-right: 6px;
-        }
-
-        .comment-input-box {
-            display: flex;
-            gap: 6px;
-            margin-top: 4px;
-        }
-
-        .comment-input-box input {
-            flex: 1;
-            padding: 8px 12px;
-            font-size: 0.85rem;
-        }
-
+        /* Modal / Dialog */
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 200;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            z-index: 1000;
         }
 
         .modal-content {
-            background: #161822;
-            padding: 28px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 420px;
+            background: #1f1f1f;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            gap: 15px;
         }
 
         input[type="text"], input[type="file"] {
             width: 100%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            background: #2a2a2a;
+            border: 1px solid #444;
             color: #fff;
-            font-size: 0.95rem;
-            outline: none;
+            border-radius: 8px;
         }
 
-        #ban-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: #0b0000;
-            color: var(--danger-color);
-            z-index: 9999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .admin-panel {
-            background: rgba(255, 51, 102, 0.05);
-            border: 1px solid var(--danger-color);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        #toast-container {
+        /* Toast Benachrichtigung */
+        #toast {
             position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 90%;
-            max-width: 400px;
-            pointer-events: none;
-        }
-
-        .toast {
-            background: rgba(22, 24, 34, 0.95);
-            border: 1px solid var(--border-color);
+            background: #333;
             color: #fff;
-            padding: 12px 18px;
-            border-radius: 14px;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: none;
+            z-index: 2000;
             font-size: 0.9rem;
-            animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-
-        .toast.success { border-color: var(--accent-color); }
-        .toast.error { border-color: var(--danger-color); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
     </style>
 </head>
 <body>
 
-    <div id="toast-container"></div>
-
-    <div id="ban-overlay">
-        <h1 style="font-size: 2rem; font-weight: 900;">🚫 GEBANNT</h1>
-        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde gesperrt.</p>
-    </div>
-
-    <div id="onboarding-modal" class="modal">
-        <div class="modal-content">
-            <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
-            <h2>Willkommen!</h2>
-            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen Usernamen:</p>
-            <input type="text" id="setup-username" placeholder="z. B. ymtmanuel...">
-            <button class="btn-primary" onclick="registerUser()">Starten</button>
-        </div>
-    </div>
-
     <header>
-        <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
-            <button class="btn-primary" onclick="openModal('upload-modal')">+ Posten</button>
-            <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin</button>
-        </div>
+        <h1>SecureMedia</h1>
+        <button class="btn" onclick="openModal()">+ Hochladen</button>
     </header>
 
-    <main>
-        <div id="admin-panel" class="admin-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel</span>
-                <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
-            </div>
-            <div id="reported-list"></div>
-        </div>
+    <div id="feed">
+        <!-- Beiträge werden hier geladen -->
+    </div>
 
-        <div id="feed">
-            <p style="text-align: center; color: #666; margin-top: 40px;">Lade Posts...</p>
-        </div>
-    </main>
-
+    <!-- Upload Modal -->
     <div id="upload-modal" class="modal">
         <div class="modal-content">
-            <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Fotos & Clips (Fotos werden automatisch optimiert)</p>
-            <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
-            <input type="file" id="video-file" accept="image/*,video/*">
+            <h3>Neuer Beitrag</h3>
+            <input type="text" id="video-title" placeholder="Titel eingeben...">
+            <input type="file" id="video-file" accept="image/*,video/*" onchange="checkFileSize()">
+            
+            <!-- Speicherplatz-Balken -->
+            <div id="size-meter" style="display: none;">
+                <div style="height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
+                    <div id="progress-fill" style="height: 100%; width: 0%; transition: width 0.3s; background: #00ff88;"></div>
+                </div>
+                <p id="size-text" style="font-size: 0.75rem; color: #aaa; margin-top: 5px;"></p>
+            </div>
+
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                <button class="btn-secondary" onclick="closeModal('upload-modal')">Abbrechen</button>
-                <button class="btn-primary" onclick="uploadMedia()">Hochladen</button>
+                <button class="btn" style="background: #444; color: #fff;" onclick="closeModal()">Abbrechen</button>
+                <button class="btn btn-primary" onclick="uploadMedia()">Hochladen</button>
             </div>
         </div>
     </div>
 
+    <div id="toast"></div>
+
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
-            authDomain: "pigeon-1e2cd.firebaseapp.com",
-            projectId: "pigeon-1e2cd",
-            storageBucket: "pigeon-1e2cd.firebasestorage.app",
-            messagingSenderId: "538627864447",
-            appId: "1:538627864447:web:8f917799e135b889bd4c4a",
-            measurementId: "G-0F13EEQ4EQ"
-        };
+        let nsfwModel = null;
+        let userId = localStorage.getItem("userId") || "user_" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem("userId", userId);
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Lokaler Speicher-Ersatz für Demo-Zwecke (kannst du an dein Firebase / Backend anpassen)
+        let posts = JSON.parse(localStorage.getItem("app_posts") || "[]");
 
-        let currentUser = localStorage.getItem("ymt_username") || "";
+        // KI-Modell beim Start laden
+        nsfwjs.load().then(model => {
+            nsfwModel = model;
+            console.log("KI-Modell erfolgreich geladen.");
+        });
 
-        function showToast(message, type = "normal") {
-            const container = document.getElementById("toast-container");
-            const toast = document.createElement("div");
-            toast.className = `toast ${type}`;
-            toast.innerText = message;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+        document.addEventListener("DOMContentLoaded", renderPosts);
+
+        function openModal() {
+            document.getElementById("upload-modal").style.display = "flex";
         }
 
-        function checkBanStatus() {
-            if (localStorage.getItem("ymt_banned") === "true") {
-                document.getElementById("ban-overlay").style.display = "flex";
+        function closeModal() {
+            document.getElementById("upload-modal").style.display = "none";
+            document.getElementById("video-title").value = "";
+            document.getElementById("video-file").value = "";
+            document.getElementById("size-meter").style.display = "none";
+        }
+
+        function showToast(text, type = "normal") {
+            const toast = document.getElementById("toast");
+            toast.innerText = text;
+            toast.style.display = "block";
+            toast.style.background = type === "error" ? "#ff3366" : "#333";
+            setTimeout(() => { toast.style.display = "none"; }, 3500);
+        }
+
+        // Live-Größen-Check
+        function checkFileSize() {
+            const fileInput = document.getElementById("video-file");
+            const meter = document.getElementById("size-meter");
+            const fill = document.getElementById("progress-fill");
+            const text = document.getElementById("size-text");
+            const uploadBtn = document.querySelector("#upload-modal .btn-primary");
+
+            if (fileInput.files.length === 0) {
+                meter.style.display = "none";
+                return;
             }
-        }
-        checkBanStatus();
 
-        function initUserSystem() {
-            if (!currentUser) openModal('onboarding-modal');
-            else updateUserUI();
-        }
+            const file = fileInput.files[0];
+            const sizeInMB = file.size / (1024 * 1024);
+            const limit = 2.5; // Maximal 2.5 MB erlaubt
+            const percentage = Math.min((sizeInMB / limit) * 100, 100);
 
-        function updateUserUI() {
-            document.getElementById("current-user-display").innerText = `@${currentUser}`;
-            if (currentUser === "ymtmanuel") {
-                document.getElementById("admin-btn").style.display = "inline-block";
-            }
-        }
+            meter.style.display = "block";
+            fill.style.width = percentage + "%";
+            text.innerText = `Größe: ${sizeInMB.toFixed(2)} MB / ${limit} MB max`;
 
-        async function registerUser() {
-            const input = document.getElementById("setup-username").value.trim().toLowerCase();
-            if (!input) return showToast("Bitte Username eingeben!", "error");
-
-            const doc = await db.collection("usernames").doc(input).get();
-            if (doc.exists) return showToast("Username vergeben!", "error");
-
-            await db.collection("usernames").doc(input).set({ registeredAt: Date.now() });
-            localStorage.setItem("ymt_username", input);
-            currentUser = input;
-            closeModal('onboarding-modal');
-            updateUserUI();
-            showToast(`Willkommen, @${currentUser}! 🎉`, "success");
-        }
-
-        function loadFeed() {
-            const feedContainer = document.getElementById("feed");
-            db.collection("loops").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-                feedContainer.innerHTML = "";
-                if (snapshot.empty) {
-                    feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Posts da.</p>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const likesList = data.likesList || [];
-                    const hasLiked = likesList.includes(currentUser);
-                    const comments = data.comments || [];
-                    const isVerified = (data.username === "ymtmanuel");
-                    const badge = isVerified ? '<span class="verified-badge">☑️</span>' : '';
-                    const isVideo = data.type === "video";
-
-                    const commentsHtml = comments.map(c => 
-                        `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
-                    ).join('');
-
-                    const mediaElement = isVideo 
-                        ? `<video src="${data.url}" controls loop playsinline></video>`
-                        : `<img src="${data.url}" class="post-img" alt="Foto" />`;
-
-                    const card = document.createElement("div");
-                    card.className = "loop-card";
-                    card.innerHTML = `
-                        <div class="media-container">${mediaElement}</div>
-                        <div class="loop-info">
-                            <div class="loop-header">
-                                <span class="loop-author">@${escapeHtml(data.username || 'Anonym')} ${badge}</span>
-                            </div>
-                            <div class="loop-title">${escapeHtml(data.title)}</div>
-                            <div class="actions">
-                                <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${doc.id}')">
-                                    ❤️ <span>${likesList.length}</span>
-                                </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleComments('${doc.id}')">
-                                    💬 ${comments.length}
-                                </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; margin-left: auto;" onclick="reportVideo('${doc.id}')">🚩</button>
-                            </div>
-                            <!-- EINKLAPPBARER KOMMENTARBEREICH -->
-                            <div class="comments-section" id="comments-${doc.id}">
-                                <div class="comment-list">${commentsHtml.length ? commentsHtml : '<p style="font-size:0.8rem; color:#666;">Keine Kommentare</p>'}</div>
-                                <div class="comment-input-box">
-                                    <input type="text" id="cmt-input-${doc.id}" placeholder="Kommentar schreiben...">
-                                    <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addComment('${doc.id}')">Send</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    feedContainer.appendChild(card);
-                });
-            });
-        }
-
-        // --- LIKE FÜR JEDEN USER NUR 1 MAL ---
-        async function toggleLike(docId) {
-            if (!currentUser) return showToast("Bitte erst anmelden!", "error");
-            const docRef = db.collection("loops").doc(docId);
-            const doc = await docRef.get();
-            if (!doc.exists) return;
-
-            const likesList = doc.data().likesList || [];
-            if (likesList.includes(currentUser)) {
-                await docRef.update({
-                    likesList: firebase.firestore.FieldValue.arrayRemove(currentUser)
-                });
+            if (sizeInMB > limit) {
+                fill.style.background = "#ff3366"; // Rot
+                text.style.color = "#ff3366";
+                uploadBtn.disabled = true;
+                uploadBtn.style.opacity = "0.3";
+            } else if (sizeInMB > 1.8) {
+                fill.style.background = "#ffcc00"; // Gelb
+                text.style.color = "#ffcc00";
+                uploadBtn.disabled = false;
+                uploadBtn.style.opacity = "1";
             } else {
-                await docRef.update({
-                    likesList: firebase.firestore.FieldValue.arrayUnion(currentUser)
-                });
+                fill.style.background = "#00ff88"; // Grün
+                text.style.color = "#00ff88";
+                uploadBtn.disabled = false;
+                uploadBtn.style.opacity = "1";
             }
         }
 
-        // --- KOMMENTARE EIN/AUSKLAPPEN ---
-        function toggleComments(docId) {
-            const box = document.getElementById(`comments-${docId}`);
-            box.style.display = (box.style.display === "flex") ? "none" : "flex";
-        }
-
-        async function addComment(docId) {
-            const input = document.getElementById(`cmt-input-${docId}`);
-            const text = input.value.trim();
-            if (!text) return;
-
-            const newComment = {
-                user: currentUser || "Anonym",
-                text: text,
-                time: Date.now()
-            };
-
-            await db.collection("loops").doc(docId).update({
-                comments: firebase.firestore.FieldValue.arrayUnion(newComment)
-            });
-
-            input.value = "";
-            showToast("Gepostet! 💬", "success");
-        }
-
-        // --- AUTOMATISCHES FOTO-RESIZING & UPLOAD ---
+        // Hauptfunktion für den Upload & KI-Scan
         async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
             const rawTitle = titleInput.value.trim();
 
-            if (!rawTitle || !fileInput.files[0]) {
-                return showToast("Titel und Datei auswählen!", "error");
-            }
+            if (!rawTitle || !fileInput.files[0]) return showToast("Titel und Datei auswählen!", "error");
+            if (!nsfwModel) return showToast("KI lädt noch, bitte kurz warten...", "error");
 
             const file = fileInput.files[0];
             const isVideo = file.type.startsWith('video/');
             const isImage = file.type.startsWith('image/');
 
-            if (!isVideo && !isImage) {
-                return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
-            }
+            if (!isVideo && !isImage) return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
 
-            showToast("Verarbeite Datei...", "normal");
+            showToast("KI scannt Inhalt (kann kurz dauern)...");
 
+            // 1. FOTO SCAN
             if (isImage) {
-                // Fotos automatisch auf max 1024px verkleinern (braucht fast keinen Speicher)
-                compressImage(file, 1024, 0.7, async (base64Data) => {
-                    await saveToFirestore(rawTitle, base64Data, "image");
+                compressImage(file, 800, 0.6, async (base64Data) => {
+                    const img = new Image();
+                    img.src = base64Data;
+                    img.onload = async () => {
+                        const predictions = await nsfwModel.classify(img);
+                        if (isUnsafe(predictions)) return showToast("🚫 Bild blockiert (Sicherheitsverstoß)!", "error");
+                        savePost(rawTitle, base64Data, "image");
+                    };
                 });
-            } else {
-                // Videos verarbeiten
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const base64Data = e.target.result;
-                    if (base64Data.length > 1048576) {
-                        return showToast("🚫 Video ist zu groß für Firestore! Bitte kürzeres Clip wählen.", "error");
+            } 
+            // 2. VIDEO SCAN (Alle 3 Sekunden ein Frame)
+            else {
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.muted = true;
+                video.load();
+
+                video.onloadedmetadata = async () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 320;
+                    canvas.height = 240;
+                    const ctx = canvas.getContext('2d');
+                    let isSafe = true;
+
+                    for (let time = 0; time < video.duration; time += 3) {
+                        video.currentTime = time;
+                        await new Promise(r => video.onseeked = r);
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        const frameData = canvas.toDataURL('image/jpeg');
+                        const img = new Image();
+                        img.src = frameData;
+                        await new Promise(r => img.onload = r);
+
+                        const predictions = await nsfwModel.classify(img);
+                        if (isUnsafe(predictions)) {
+                            isSafe = false;
+                            break;
+                        }
                     }
-                    await saveToFirestore(rawTitle, base64Data, "video");
+
+                    if (!isSafe) {
+                        showToast("🚫 Video blockiert (Sicherheitsverstoß)!", "error");
+                    } else {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            savePost(rawTitle, e.target.result, "video");
+                        };
+                        reader.readAsDataURL(file);
+                    }
                 };
-                reader.readAsDataURL(file);
             }
         }
 
+        // Hilfsfunktion KI Check
+        function isUnsafe(predictions) {
+            return predictions.some(p => 
+                (p.className === 'Porn' || p.className === 'Hentai' || p.className === 'Sexy') && p.probability > 0.65
+            );
+        }
+
+        // Bild-Komprimierung
         function compressImage(file, maxWidth, quality, callback) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.readAsDataURL(file);
+            reader.onload = event => {
                 const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
 
@@ -610,87 +369,77 @@
 
                     canvas.width = width;
                     canvas.height = height;
-                    const ctx = canvas.getContext("2d");
+                    const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-
-                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
-                    callback(dataUrl);
+                    callback(canvas.toDataURL('image/jpeg', quality));
                 };
-                img.src = e.target.result;
             };
-            reader.readAsDataURL(file);
         }
 
-        async function saveToFirestore(title, url, type) {
-            try {
-                await db.collection("loops").add({
-                    username: currentUser,
-                    title: title,
-                    url: url,
-                    type: type,
-                    likesList: [],
-                    comments: [],
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    reported: false
-                });
+        // Beitrag speichern
+        function savePost(title, dataUrl, type) {
+            const newPost = {
+                id: "post_" + Date.now(),
+                title: title,
+                src: dataUrl,
+                type: type,
+                likes: []
+            };
 
-                showToast("Post erfolgreich erstellt! 🚀", "success");
-                closeModal('upload-modal');
-                document.getElementById("video-title").value = "";
-                document.getElementById("video-file").value = "";
-            } catch (err) {
-                showToast("Fehler beim Speichern!", "error");
+            posts.unshift(newPost);
+            localStorage.setItem("app_posts", JSON.stringify(posts));
+            closeModal();
+            showToast("Erfolgreich hochgeladen!");
+            renderPosts();
+        }
+
+        // 1-Like-System Logik
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const index = post.likes.indexOf(userId);
+            if (index === -1) {
+                post.likes.push(userId); // Like hinzufügen
+            } else {
+                post.likes.splice(index, 1); // Like entfernen (Toggle)
             }
+
+            localStorage.setItem("app_posts", JSON.stringify(posts));
+            renderPosts();
         }
 
-        async function reportVideo(id) {
-            await db.collection("loops").doc(id).update({ reported: true });
-            showToast("Beitrag gemeldet.", "normal");
-        }
+        // Feed anzeigen
+        function renderPosts() {
+            const feed = document.getElementById("feed");
+            feed.innerHTML = "";
 
-        function toggleAdmin() {
-            const panel = document.getElementById("admin-panel");
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
-            if (panel.style.display === "block") loadReportedVideos();
-        }
+            if (posts.length === 0) {
+                feed.innerHTML = "<p style='text-align: center; color: #666; margin-top: 40px;'>Noch keine Beiträge vorhanden.</p>";
+                return;
+            }
 
-        function loadReportedVideos() {
-            const list = document.getElementById("reported-list");
-            db.collection("loops").where("reported", "==", true).onSnapshot(snapshot => {
-                list.innerHTML = snapshot.empty ? '<p style="font-size:0.85rem; color:#aaa;">Keine Meldungen.</p>' : '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const item = document.createElement("div");
-                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 8px;";
-                    item.innerHTML = `
-                        <p><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</p>
-                        <div style="margin-top: 6px; display:flex; gap:6px;">
-                            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.8rem;" onclick="banAndDelete('${doc.id}', '${data.username}')">Löschen & Bannen</button>
-                            <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="ignoreReport('${doc.id}')">Ignorieren</button>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
+            posts.forEach(post => {
+                const isLiked = post.likes.includes(userId);
+                const card = document.createElement("div");
+                card.className = "card";
+
+                let mediaHtml = post.type === "video" 
+                    ? `<video src="${post.src}" controls></video>`
+                    : `<img src="${post.src}" alt="Beitrag">`;
+
+                card.innerHTML = `
+                    <div class="card-header">${post.title}</div>
+                    <div class="card-body">${mediaHtml}</div>
+                    <div class="card-footer">
+                        <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+                            ❤️ ${post.likes.length}
+                        </button>
+                    </div>
+                `;
+                feed.appendChild(card);
             });
         }
-
-        async function banAndDelete(docId, username) {
-            await db.collection("loops").doc(docId).delete();
-            if (username) await db.collection("usernames").doc(username).delete();
-            showToast("Gelöscht & Gebannt!", "success");
-        }
-
-        async function ignoreReport(docId) {
-            await db.collection("loops").doc(docId).update({ reported: false });
-            showToast("Meldung ignoriert.", "normal");
-        }
-
-        function openModal(id) { document.getElementById(id).style.display = "flex"; }
-        function closeModal(id) { document.getElementById(id).style.display = "none"; }
-        function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
-
-        initUserSystem();
-        loadFeed();
     </script>
 </body>
 </html>
