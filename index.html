@@ -2,67 +2,67 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>PigVin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PigVin | V2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #fff; margin: 0; }
+        body { background: #050505; color: #e5e5e5; font-family: sans-serif; overflow: hidden; }
         .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .slide { height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; }
+        .slide { height: 100vh; scroll-snap-align: start; position: relative; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="feed" class="feed">
-        <!-- Videos landen hier -->
+    <!-- Feed -->
+    <div id="feed" class="feed"></div>
+
+    <!-- Admin Panel Button (Nur für dich sichtbar machen) -->
+    <button onclick="document.getElementById('admin').classList.toggle('hidden')" 
+            class="fixed top-5 left-5 z-50 p-2 glass rounded-lg text-xs">ADMIN</button>
+
+    <!-- Admin Panel -->
+    <div id="admin" class="hidden fixed inset-0 z-50 bg-black p-10 overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-5">Admin Dashboard - Meldungen</h2>
+        <div id="report-list"></div>
+        <button onclick="this.parentElement.classList.add('hidden')" class="mt-5 p-2 bg-red-900">Schließen</button>
     </div>
 
-    <!-- Upload Button -->
-    <button onclick="document.getElementById('video-input').click()" 
-            class="fixed bottom-20 right-5 bg-white text-black p-4 rounded-full font-bold z-50">
-        +
-    </button>
+    <!-- Upload Overlay -->
+    <div class="fixed bottom-24 right-5 z-40">
+        <button onclick="document.getElementById('video-input').click()" 
+                class="w-14 h-14 bg-white text-black rounded-full text-2xl font-bold">+</button>
+    </div>
     <input type="file" id="video-input" class="hidden" accept="video/*">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // ... (Hier deine Config einfügen) ...
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
-            projectId: "pigeon-1e2cd",
-            storageBucket: "pigeon-1e2cd.firebasestorage.app",
-            appId: "1:538627864447:web:6453978db81aeb5fbd4c4a"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-
-        // Videos laden
+        // Lade Feed Funktion
         async function loadFeed() {
+            const snap = await getDocs(collection(db, "videos"));
             const feed = document.getElementById('feed');
-            const q = query(collection(db, "videos"), orderBy("timestamp", "desc"));
-            const snap = await getDocs(q);
-            
             feed.innerHTML = "";
-            snap.forEach((doc) => {
-                const vid = document.createElement('div');
-                vid.className = 'slide';
-                vid.innerHTML = `<video src="${doc.data().url}" autoplay loop muted playsinline></video>`;
-                feed.appendChild(vid);
+            snap.forEach(doc => {
+                const data = doc.data();
+                const div = document.createElement('div');
+                div.className = 'slide';
+                div.innerHTML = `
+                    <video src="${data.url}" autoplay loop muted playsinline></video>
+                    <button onclick="reportVideo('${doc.id}')" class="absolute top-5 right-5 text-3xl">⚠️</button>
+                `;
+                feed.appendChild(div);
             });
         }
 
-        // Upload
-        document.getElementById('video-input').onchange = async (e) => {
-            const file = e.target.files[0];
-            const storageRef = ref(storage, 'videos/' + Date.now());
-            await uploadBytes(storageRef, file);
-            const url = await getDownloadURL(storageRef);
-            await addDoc(collection(db, "videos"), { url: url, timestamp: new Date() });
-            loadFeed();
+        // Melden Funktion
+        window.reportVideo = async (id) => {
+            await updateDoc(doc(db, "videos", id), { reported: true });
+            alert("Video gemeldet.");
         };
 
         loadFeed();
