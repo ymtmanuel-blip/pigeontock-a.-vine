@@ -3,75 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PigVin High-Contrast</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>PigVin - Admin Edition</title>
     <style>
-        body { background: #000; color: #fff; font-family: Arial, sans-serif; }
-        /* Video Container */
-        .video-slide { height: 100vh; width: 100%; border-bottom: 5px solid #333; display: flex; align-items: center; justify-content: center; position: relative; }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        /* Große, lesbare Buttons */
-        .btn-main { background: #fff; color: #000; padding: 20px; font-size: 20px; font-weight: bold; border-radius: 10px; cursor: pointer; }
-        .btn-admin { background: #ff0000; color: #fff; padding: 10px; font-weight: bold; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; }
+        #feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .video-slide { height: 100vh; scroll-snap-align: start; position: relative; border-bottom: 2px solid #333; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .controls { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        input { padding: 15px; width: 250px; border-radius: 5px; border: none; }
+        button { padding: 15px; background: #fff; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- Admin Panel (Standardmäßig versteckt) -->
-    <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-black p-5">
-        <h1 class="text-4xl font-bold mb-5">ADMIN BEREICH</h1>
-        <button onclick="document.getElementById('admin-panel').classList.add('hidden')" class="btn-main mb-5">X SCHLIESSEN</button>
-        <div id="report-list" class="text-xl"></div>
-    </div>
-
-    <!-- Feed -->
+    <!-- Feed Bereich -->
     <div id="feed"></div>
 
-    <!-- Upload Button -->
-    <div class="fixed bottom-10 right-10">
-        <button onclick="document.getElementById('video-input').click()" class="btn-main">VIDEO HOCHLADEN</button>
-        <button onclick="document.getElementById('admin-panel').classList.remove('hidden')" class="btn-admin mt-2">ADMIN</button>
+    <!-- Post Bereich -->
+    <div class="controls">
+        <input type="text" id="urlInput" placeholder="MP4 Link hier einfügen...">
+        <button onclick="postVideo()">POSTEN</button>
     </div>
-
-    <input type="file" id="video-input" class="hidden" accept="video/*">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // DEINE CONFIG HIER EINFÜGEN
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
-            projectId: "pigeon-1e2cd",
-            storageBucket: "pigeon-1e2cd.firebasestorage.app",
-            appId: "1:538627864447:web:6453978db81aeb5fbd4c4a"
+            databaseURL: "https://pigeon-1e2cd-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "pigeon-1e2cd"
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
 
-        async function loadFeed() {
-            const feed = document.getElementById('feed');
-            const snap = await getDocs(collection(db, "videos"));
-            feed.innerHTML = "";
-            snap.forEach(docSnap => {
-                const data = docSnap.data();
-                const div = document.createElement('div');
-                div.className = 'video-slide';
-                div.innerHTML = `
-                    <video src="${data.url}" autoplay loop muted playsinline></video>
-                    <button onclick="report('${docSnap.id}')" class="absolute top-5 right-5 text-4xl bg-black p-5 border-2 border-white">⚠️ MELDEN</button>
-                `;
-                feed.appendChild(div);
-            });
-        }
-
-        window.report = async (id) => {
-            await updateDoc(doc(db, "videos", id), { reported: true });
-            alert("Video wurde gemeldet!");
+        // Video posten
+        window.postVideo = () => {
+            const url = document.getElementById('urlInput').value;
+            if(!url) return alert("Link fehlt!");
+            push(ref(db, 'videos'), { url: url });
+            document.getElementById('urlInput').value = "";
+            alert("Video ist online!");
         };
 
-        loadFeed();
+        // Feed live laden
+        const feed = document.getElementById('feed');
+        onValue(ref(db, 'videos'), (snapshot) => {
+            feed.innerHTML = ""; 
+            const data = snapshot.val();
+            if (data) {
+                Object.values(data).forEach((video) => {
+                    feed.innerHTML += `
+                        <div class="video-slide">
+                            <video src="${video.url}" autoplay loop muted playsinline></video>
+                        </div>`;
+                });
+            }
+        });
     </script>
 </body>
 </html>
