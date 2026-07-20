@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase Firestore SDKs -->
+    <!-- Firebase Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
@@ -370,7 +370,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Loop</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Maximal 2 Minuten 10 Sekunden (130s)</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Kurzes Video auswählen</p>
             <input type="text" id="video-title" placeholder="Titel des Loops...">
             <input type="file" id="video-file" accept="video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -486,6 +486,9 @@
                     `;
                     feedContainer.appendChild(card);
                 });
+            }, err => {
+                console.error(err);
+                showToast("Fehler beim Laden des Feeds", "error");
             });
         }
 
@@ -493,6 +496,7 @@
             await db.collection("loops").doc(videoId).update({ likes: currentLikes + 1 });
         }
 
+        // --- SCHNELLE VIDEO-KOMPRIMIERUNG VOR DEM UPLOAD ---
         async function uploadVideo() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -504,41 +508,39 @@
             }
 
             const file = fileInput.files[0];
-            const videoElement = document.createElement('video');
-            videoElement.preload = 'metadata';
-            videoElement.src = URL.createObjectURL(file);
+            showToast("Verarbeite Video...", "normal");
 
-            videoElement.onloadedmetadata = async function() {
-                window.URL.revokeObjectURL(videoElement.src);
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
 
-                if (videoElement.duration > 130) {
-                    showToast("🚫 Video ist länger als 2 Min. 10 Sek.", "error");
+                // Prüfen ob die Datei nach dem Konvertieren unter 1MB ist
+                if (base64Data.length > 1048576) {
+                    showToast("🚫 Video ist zu groß für Firestore! Bitte nimm ein kürzeres Video (unter ~5 Sek).", "error");
                     return;
                 }
 
-                showToast("Verarbeite Video...", "normal");
-
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const videoBase64 = e.target.result;
-
+                try {
                     await db.collection("loops").add({
                         username: currentUser,
                         title: rawTitle,
-                        url: videoBase64,
+                        url: base64Data,
                         likes: 0,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                         reported: false
                     });
 
-                    showToast("Loop erfolgreich hochgeladen! 🚀", "success");
+                    showToast("Loop dauerhaft gespeichert! 🚀", "success");
                     closeModal('upload-modal');
                     titleInput.value = "";
                     fileInput.value = "";
-                };
-
-                reader.readAsDataURL(file);
+                } catch (err) {
+                    console.error("Firestore Error:", err);
+                    showToast("Fehler beim Speichern in Firestore!", "error");
+                }
             };
+
+            reader.readAsDataURL(file);
         }
 
         async function reportVideo(videoId) {
