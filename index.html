@@ -182,7 +182,7 @@
 
         .actions {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
         }
 
@@ -197,12 +197,18 @@
             padding: 6px 14px;
         }
 
-        /* --- KOMMENTAR-STYLING --- */
+        .like-btn.liked {
+            background: rgba(255, 51, 102, 0.2);
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        /* --- KOMMENTAR-STYLING (EINKLAPPBAR) --- */
         .comments-section {
             border-top: 1px solid var(--border-color);
             padding-top: 10px;
             margin-top: 6px;
-            display: flex;
+            display: none; /* Standardmäßig ausgeblendet */
             flex-direction: column;
             gap: 8px;
         }
@@ -211,7 +217,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            max-height: 150px;
+            max-height: 180px;
             overflow-y: auto;
         }
 
@@ -377,7 +383,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Foto oder kurzes Video auswählen</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Fotos & Clips (Fotos werden automatisch optimiert)</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -457,18 +463,20 @@
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const likes = data.likes || 0;
+                    const likesList = data.likesList || [];
+                    const hasLiked = likesList.includes(currentUser);
+                    const comments = data.comments || [];
                     const isVerified = (data.username === "ymtmanuel");
                     const badge = isVerified ? '<span class="verified-badge">☑️</span>' : '';
                     const isVideo = data.type === "video";
 
-                    const commentsHtml = (data.comments || []).map(c => 
+                    const commentsHtml = comments.map(c => 
                         `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
                     ).join('');
 
                     const mediaElement = isVideo 
                         ? `<video src="${data.url}" controls loop playsinline></video>`
-                        : `<img src="${data.url}" class="post-img" alt="Meme/Foto" />`;
+                        : `<img src="${data.url}" class="post-img" alt="Foto" />`;
 
                     const card = document.createElement("div");
                     card.className = "loop-card";
@@ -480,14 +488,17 @@
                             </div>
                             <div class="loop-title">${escapeHtml(data.title)}</div>
                             <div class="actions">
-                                <button class="like-btn" onclick="likeVideo('${doc.id}', ${likes})">
-                                    ❤️ <span>${likes}</span>
+                                <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${doc.id}')">
+                                    ❤️ <span>${likesList.length}</span>
                                 </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="reportVideo('${doc.id}')">🚩 Melden</button>
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleComments('${doc.id}')">
+                                    💬 ${comments.length}
+                                </button>
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; margin-left: auto;" onclick="reportVideo('${doc.id}')">🚩</button>
                             </div>
-                            <!-- KOMMENTARBEREICH -->
-                            <div class="comments-section">
-                                <div class="comment-list">${commentsHtml}</div>
+                            <!-- EINKLAPPBARER KOMMENTARBEREICH -->
+                            <div class="comments-section" id="comments-${doc.id}">
+                                <div class="comment-list">${commentsHtml.length ? commentsHtml : '<p style="font-size:0.8rem; color:#666;">Keine Kommentare</p>'}</div>
                                 <div class="comment-input-box">
                                     <input type="text" id="cmt-input-${doc.id}" placeholder="Kommentar schreiben...">
                                     <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addComment('${doc.id}')">Send</button>
@@ -500,11 +511,31 @@
             });
         }
 
-        async function likeVideo(id, currentLikes) {
-            await db.collection("loops").doc(id).update({ likes: currentLikes + 1 });
+        // --- LIKE FÜR JEDEN USER NUR 1 MAL ---
+        async function toggleLike(docId) {
+            if (!currentUser) return showToast("Bitte erst anmelden!", "error");
+            const docRef = db.collection("loops").doc(docId);
+            const doc = await docRef.get();
+            if (!doc.exists) return;
+
+            const likesList = doc.data().likesList || [];
+            if (likesList.includes(currentUser)) {
+                await docRef.update({
+                    likesList: firebase.firestore.FieldValue.arrayRemove(currentUser)
+                });
+            } else {
+                await docRef.update({
+                    likesList: firebase.firestore.FieldValue.arrayUnion(currentUser)
+                });
+            }
         }
 
-        // --- KOMMENTAR HINZUFÜGEN (VERBRAUCHT FAST 0 KB) ---
+        // --- KOMMENTARE EIN/AUSKLAPPEN ---
+        function toggleComments(docId) {
+            const box = document.getElementById(`comments-${docId}`);
+            box.style.display = (box.style.display === "flex") ? "none" : "flex";
+        }
+
         async function addComment(docId) {
             const input = document.getElementById(`cmt-input-${docId}`);
             const text = input.value.trim();
@@ -521,10 +552,10 @@
             });
 
             input.value = "";
-            showToast("Kommentar gepostet! 💬", "success");
+            showToast("Gepostet! 💬", "success");
         }
 
-        // --- UPLOAD FÜR FOTOS UND VIDEOS ---
+        // --- AUTOMATISCHES FOTO-RESIZING & UPLOAD ---
         async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -544,37 +575,72 @@
 
             showToast("Verarbeite Datei...", "normal");
 
+            if (isImage) {
+                // Fotos automatisch auf max 1024px verkleinern (braucht fast keinen Speicher)
+                compressImage(file, 1024, 0.7, async (base64Data) => {
+                    await saveToFirestore(rawTitle, base64Data, "image");
+                });
+            } else {
+                // Videos verarbeiten
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Data = e.target.result;
+                    if (base64Data.length > 1048576) {
+                        return showToast("🚫 Video ist zu groß für Firestore! Bitte kürzeres Clip wählen.", "error");
+                    }
+                    await saveToFirestore(rawTitle, base64Data, "video");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function compressImage(file, maxWidth, quality, callback) {
             const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Data = e.target.result;
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
 
-                // Max 1MB Limit für Firestore Dokument
-                if (base64Data.length > 1048576) {
-                    return showToast("🚫 Datei ist zu groß (>1MB)! Bitte kleineres Bild/Video wählen.", "error");
-                }
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
 
-                try {
-                    await db.collection("loops").add({
-                        username: currentUser,
-                        title: rawTitle,
-                        url: base64Data,
-                        type: isVideo ? "video" : "image",
-                        likes: 0,
-                        comments: [],
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        reported: false
-                    });
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
 
-                    showToast("Post erfolgreich erstellt! 🚀", "success");
-                    closeModal('upload-modal');
-                    titleInput.value = "";
-                    fileInput.value = "";
-                } catch (err) {
-                    showToast("Fehler beim Speichern!", "error");
-                }
+                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    callback(dataUrl);
+                };
+                img.src = e.target.result;
             };
-
             reader.readAsDataURL(file);
+        }
+
+        async function saveToFirestore(title, url, type) {
+            try {
+                await db.collection("loops").add({
+                    username: currentUser,
+                    title: title,
+                    url: url,
+                    type: type,
+                    likesList: [],
+                    comments: [],
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    reported: false
+                });
+
+                showToast("Post erfolgreich erstellt! 🚀", "success");
+                closeModal('upload-modal');
+                document.getElementById("video-title").value = "";
+                document.getElementById("video-file").value = "";
+            } catch (err) {
+                showToast("Fehler beim Speichern!", "error");
+            }
         }
 
         async function reportVideo(id) {
