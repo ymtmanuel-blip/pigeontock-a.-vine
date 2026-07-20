@@ -4,29 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ymt Loops</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
     <!-- Firebase Realtime Database SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-color: #0f0f12;
-            --card-bg: #1a1a24;
-            --accent-color: #00e676;
-            --danger-color: #ff5252;
-            --text-color: #ffffff;
-            --verified-color: #2196f3;
+            --bg-color: #0b0c10;
+            --card-bg: rgba(22, 24, 34, 0.7);
+            --accent-color: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.3);
+            --danger-color: #ff3366;
+            --text-color: #f0f2f5;
+            --verified-color: #00d2ff;
+            --border-color: rgba(255, 255, 255, 0.08);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Outfit', sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 0%, #1a1c2e 0%, #0b0c10 70%);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
@@ -35,44 +43,87 @@
             padding-bottom: 40px;
         }
 
+        /* App Logo Style */
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #00ff88, #00d2ff);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 0.9rem;
+            font-weight: 900;
+            -webkit-text-fill-color: initial;
+        }
+
         header {
             width: 100%;
             max-width: 500px;
-            padding: 15px 20px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(26, 26, 36, 0.85);
-            backdrop-filter: blur(10px);
+            background: rgba(11, 12, 16, 0.8);
+            backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid #2a2a3a;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            color: var(--accent-color);
-            font-weight: 800;
-            letter-spacing: -0.5px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         button {
             cursor: pointer;
             border: none;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-weight: bold;
-            transition: transform 0.1s ease;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
         }
 
         button:active {
-            transform: scale(0.95);
+            transform: scale(0.96);
         }
 
-        .btn-primary { background-color: var(--accent-color); color: #000; }
-        .btn-danger { background-color: var(--danger-color); color: #fff; }
-        .btn-secondary { background-color: #2a2a3a; color: #fff; }
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00c868);
+            color: #000;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
 
         main {
             width: 100%;
@@ -85,10 +136,11 @@
 
         .loop-card {
             background: var(--card-bg);
-            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
             overflow: hidden;
-            border: 1px solid #2a2a3a;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
         .video-container {
@@ -105,10 +157,10 @@
         }
 
         .loop-info {
-            padding: 15px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
         .loop-header {
@@ -118,43 +170,50 @@
         }
 
         .loop-author {
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.95rem;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            color: #aaa;
         }
 
         .verified-badge {
             color: var(--verified-color);
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
         .loop-title {
-            font-size: 1.05rem;
-            color: #ddd;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
         }
 
         .actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .like-btn {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 6px 14px;
         }
 
+        /* Modal Overlay */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
             z-index: 200;
             justify-content: center;
             align-items: center;
@@ -162,31 +221,45 @@
         }
 
         .modal-content {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 16px;
+            background: #161822;
+            padding: 28px;
+            border-radius: 24px;
             width: 100%;
-            max-width: 450px;
+            max-width: 420px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            border: 1px solid #2a2a3a;
+            gap: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .modal-content h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
         }
 
         input[type="text"], input[type="file"] {
             width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #3a3a4a;
-            background: #0f0f12;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.4);
             color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
         }
 
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Banned Overlay */
         #ban-overlay {
             display: none;
             position: fixed;
             top:0; left:0; width:100%; height:100%;
-            background: #100000;
+            background: #0b0000;
             color: var(--danger-color);
             z-index: 9999;
             flex-direction: column;
@@ -196,30 +269,94 @@
             padding: 20px;
         }
 
+        /* Admin Panel */
         .admin-panel {
-            background: #201212;
+            background: rgba(255, 51, 102, 0.05);
             border: 1px solid var(--danger-color);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 16px;
+            padding: 16px;
             margin-bottom: 20px;
             display: none;
+        }
+
+        /* Custom Toast Notification System */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(22, 24, 34, 0.95);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.success { border-color: var(--accent-color); }
+        .toast.error { border-color: var(--danger-color); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
         }
     </style>
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <!-- Banned Screen -->
     <div id="ban-overlay">
-        <h1>🚫 PERMANENT GEBANNT</h1>
-        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde dauerhaft gesperrt.</p>
+        <h1 style="font-size: 2rem; font-weight: 900;">🚫 GEBANNT</h1>
+        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde dauerhaft von ymt Loops gesperrt.</p>
+    </div>
+
+    <!-- Onboarding Modal (Username-Eingabe) -->
+    <div id="onboarding-modal" class="modal">
+        <div class="modal-content">
+            <div class="logo">
+                <span class="logo-icon">∞</span> ymt Loops
+            </div>
+            <h2>Willkommen!</h2>
+            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen eindeutigen Usernamen. Dieser wird fest auf deinem Gerät gespeichert.</p>
+            <input type="text" id="setup-username" placeholder="z. B. ymtmanuel...">
+            <button class="btn-primary" onclick="registerUser()">Starten</button>
+        </div>
     </div>
 
     <!-- Header -->
     <header>
-        <h1>ymt Loops</h1>
-        <div>
-            <button class="btn-primary" onclick="openModal('upload-modal')">+ Hochladen</button>
-            <button class="btn-secondary" onclick="loginAdmin()">Admin</button>
+        <div class="logo">
+            <span class="logo-icon">∞</span> ymt Loops
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
+            <button class="btn-primary" onclick="openModal('upload-modal')">+ Upload</button>
+            <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin</button>
         </div>
     </header>
 
@@ -227,8 +364,8 @@
         <!-- Admin Panel -->
         <div id="admin-panel" class="admin-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel (ymtmanuel)</span>
-                <button class="btn-secondary" style="padding: 2px 8px;" onclick="closeAdmin()">X</button>
+                <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel</span>
+                <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
             </div>
             <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;">Gemeldete Videos verwalten und Täter bannen:</p>
             <div id="reported-list"></div>
@@ -236,23 +373,21 @@
 
         <!-- Feed -->
         <div id="feed">
-            <p style="text-align: center; color: #666;">Lade Loops...</p>
+            <p style="text-align: center; color: #666; margin-top: 40px;">Lade Loops...</p>
         </div>
     </main>
 
     <!-- Upload Modal -->
     <div id="upload-modal" class="modal">
         <div class="modal-content">
-            <h2>Video hochladen</h2>
+            <h2>Neuer Loop</h2>
             <p style="font-size: 0.8rem; color: #aaa;">Maximal 2 Minuten 10 Sekunden (130s)</p>
-            <input type="text" id="username" placeholder="Dein Username...">
             <input type="text" id="video-title" placeholder="Titel des Loops...">
             <input type="file" id="video-file" accept="video/*">
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                 <button class="btn-secondary" onclick="closeModal('upload-modal')">Abbrechen</button>
                 <button class="btn-primary" onclick="uploadVideo()">Hochladen</button>
             </div>
-            <p id="upload-status" style="font-size: 0.85rem; color: var(--accent-color);"></p>
         </div>
     </div>
 
@@ -272,6 +407,18 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        let currentUser = localStorage.getItem("ymt_username") || "";
+
+        // --- TOAST NOTIFICATIONS (Ersatz für alert) ---
+        function showToast(message, type = "normal") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         // --- BAN CHECK ---
         function checkBanStatus() {
             if (localStorage.getItem("ymt_banned") === "true") {
@@ -280,13 +427,56 @@
         }
         checkBanStatus();
 
+        // --- USER SYSTEM INITIALISIERUNG ---
+        function initUserSystem() {
+            if (!currentUser) {
+                openModal('onboarding-modal');
+            } else {
+                updateUserUI();
+            }
+        }
+
+        function updateUserUI() {
+            document.getElementById("current-user-display").innerText = `@${currentUser}`;
+            if (currentUser === "ymtmanuel") {
+                document.getElementById("admin-btn").style.display = "inline-block";
+            }
+        }
+
+        async function registerUser() {
+            const input = document.getElementById("setup-username").value.trim().toLowerCase();
+            if (!input) {
+                showToast("Bitte gib einen Namen ein!", "error");
+                return;
+            }
+
+            const nameRef = db.ref(`usernames/${input}`);
+            const snapshot = await nameRef.once("value");
+
+            if (snapshot.exists()) {
+                showToast("🚫 Dieser Username ist bereits vergeben!", "error");
+                return;
+            }
+
+            // Name in Firebase reservieren
+            await nameRef.set({ registeredAt: Date.now() });
+            
+            // Name lokal speichern
+            localStorage.setItem("ymt_username", input);
+            currentUser = input;
+
+            closeModal('onboarding-modal');
+            updateUserUI();
+            showToast(`Willkommen, @${currentUser}! 🎉`, "success");
+        }
+
         // --- FEED LADEN ---
         function loadFeed() {
             const feedContainer = document.getElementById("feed");
             db.ref("loops").on("value", snapshot => {
                 feedContainer.innerHTML = "";
                 if (!snapshot.exists()) {
-                    feedContainer.innerHTML = '<p style="text-align: center; color: #666;">Noch keine Loops da. Sei der Erste!</p>';
+                    feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Loops da. Sei der Erste!</p>';
                     return;
                 }
 
@@ -315,7 +505,7 @@
                                 <button class="like-btn" onclick="likeVideo('${data.id}', ${likes})">
                                     ❤️ <span>${likes}</span>
                                 </button>
-                                <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="reportVideo('${data.id}')">🚩 Melden</button>
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="reportVideo('${data.id}')">🚩 Melden</button>
                             </div>
                         </div>
                     `;
@@ -331,34 +521,12 @@
 
         // --- UPLOAD FUNKTION ---
         async function uploadVideo() {
-            const usernameInput = document.getElementById("username");
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
-            const status = document.getElementById("upload-status");
-
-            const enteredUsername = usernameInput.value.trim().toLowerCase();
             const rawTitle = titleInput.value.trim();
 
-            if (!enteredUsername || !rawTitle || !fileInput.files[0]) {
-                alert("Bitte fülle alle Felder aus!");
-                return;
-            }
-
-            status.innerText = "Prüfe Username...";
-
-            // Prüfe Username
-            const userSnapshot = await db.ref(`usernames/${enteredUsername}`).once("value");
-            
-            if (enteredUsername === "ymtmanuel") {
-                const adminPass = prompt("Sicherheitsabfrage für ymtmanuel Passwort:");
-                if (adminPass !== "admin123") {
-                    alert("🚫 Zugriff auf ymtmanuel verweigert!");
-                    status.innerText = "";
-                    return;
-                }
-            } else if (userSnapshot.exists()) {
-                alert("🚫 Dieser Username ist bereits vergeben!");
-                status.innerText = "";
+            if (!rawTitle || !fileInput.files[0]) {
+                showToast("Bitte Titel und Video auswählen!", "error");
                 return;
             }
 
@@ -371,24 +539,18 @@
                 window.URL.revokeObjectURL(videoElement.src);
 
                 if (videoElement.duration > 130) {
-                    alert("🚫 Video ist länger als 2 Min. 10 Sek.");
-                    status.innerText = "";
+                    showToast("🚫 Video ist länger als 2 Min. 10 Sek.", "error");
                     return;
                 }
 
-                status.innerText = "Verarbeite Video...";
+                showToast("Verarbeite Video...", "normal");
 
-                // Video in Base64 umwandeln und in Realtime DB speichern
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     const videoBase64 = e.target.result;
 
-                    if (enteredUsername !== "ymtmanuel") {
-                        await db.ref(`usernames/${enteredUsername}`).set(true);
-                    }
-
                     await db.ref("loops").push({
-                        username: enteredUsername,
+                        username: currentUser,
                         title: rawTitle,
                         url: videoBase64,
                         likes: 0,
@@ -396,13 +558,10 @@
                         reported: false
                     });
 
-                    status.innerText = "Erfolgreich hochgeladen!";
-                    setTimeout(() => {
-                        closeModal('upload-modal');
-                        titleInput.value = "";
-                        fileInput.value = "";
-                        status.innerText = "";
-                    }, 1000);
+                    showToast("Loop erfolgreich hochgeladen! 🚀", "success");
+                    closeModal('upload-modal');
+                    titleInput.value = "";
+                    fileInput.value = "";
                 };
 
                 reader.readAsDataURL(file);
@@ -412,22 +571,18 @@
         // --- MELDE-FUNKTION ---
         function reportVideo(videoId) {
             db.ref(`loops/${videoId}`).update({ reported: true });
-            alert("Video wurde an ymtmanuel gemeldet.");
+            showToast("Video wurde an ymtmanuel gemeldet.", "normal");
         }
 
         // --- ADMIN PANEL ---
-        function loginAdmin() {
-            const username = prompt("Admin Benutzername:");
-            if (username === "ymtmanuel") {
-                document.getElementById("admin-panel").style.display = "block";
-                loadReportedVideos();
+        function toggleAdmin() {
+            const panel = document.getElementById("admin-panel");
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
             } else {
-                alert("Falscher Admin-Name!");
+                panel.style.display = "block";
+                loadReportedVideos();
             }
-        }
-
-        function closeAdmin() {
-            document.getElementById("admin-panel").style.display = "none";
         }
 
         function loadReportedVideos() {
@@ -442,12 +597,12 @@
                 snapshot.forEach(child => {
                     const data = child.val();
                     const item = document.createElement("div");
-                    item.style.cssText = "background: #1a1a24; padding: 10px; border-radius: 8px; margin-bottom: 8px;";
+                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color);";
                     item.innerHTML = `
                         <p><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</p>
-                        <div style="margin-top: 5px; display:flex; gap:5px;">
-                            <button class="btn-danger" onclick="banAndDelete('${child.key}')">Löschen & Bannen</button>
-                            <button class="btn-secondary" onclick="ignoreReport('${child.key}')">Meldung ignorieren</button>
+                        <div style="margin-top: 8px; display:flex; gap:8px;">
+                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="banAndDelete('${child.key}', '${data.username}')">Löschen & Bannen</button>
+                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="ignoreReport('${child.key}')">Ignorieren</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -455,17 +610,27 @@
             });
         }
 
-        function banAndDelete(videoId) {
-            if (confirm("Video löschen und Gerät sperren?")) {
-                db.ref(`loops/${videoId}`).remove();
+        async function banAndDelete(videoId, usernameToFree) {
+            // Video löschen
+            await db.ref(`loops/${videoId}`).remove();
+            
+            // Username in DB wieder freigeben
+            if (usernameToFree) {
+                await db.ref(`usernames/${usernameToFree}`).remove();
+            }
+
+            // Falls der gebannte Nutzer der aktuelle ist (Beispiel)
+            if (currentUser === usernameToFree) {
                 localStorage.setItem("ymt_banned", "true");
-                alert("Gesperrt & gelöscht!");
                 checkBanStatus();
             }
+
+            showToast("Video gelöscht und User gebannt!", "success");
         }
 
         function ignoreReport(videoId) {
             db.ref(`loops/${videoId}`).update({ reported: false });
+            showToast("Meldung verworfen.", "normal");
         }
 
         function openModal(id) { document.getElementById(id).style.display = "flex"; }
@@ -474,6 +639,7 @@
             return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
         }
 
+        initUserSystem();
         loadFeed();
     </script>
 </body>
