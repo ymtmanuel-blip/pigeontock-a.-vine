@@ -9,9 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase Realtime Database SDK -->
+    <!-- Firebase Firestore SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -43,7 +43,6 @@
             padding-bottom: 40px;
         }
 
-        /* App Logo Style */
         .logo {
             font-size: 1.8rem;
             font-weight: 900;
@@ -207,7 +206,6 @@
             padding: 6px 14px;
         }
 
-        /* Modal Overlay */
         .modal {
             display: none;
             position: fixed;
@@ -254,7 +252,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Banned Overlay */
         #ban-overlay {
             display: none;
             position: fixed;
@@ -269,7 +266,6 @@
             padding: 20px;
         }
 
-        /* Admin Panel */
         .admin-panel {
             background: rgba(255, 51, 102, 0.05);
             border: 1px solid var(--danger-color);
@@ -279,7 +275,6 @@
             display: none;
         }
 
-        /* Custom Toast Notification System */
         #toast-container {
             position: fixed;
             bottom: 20px;
@@ -329,26 +324,23 @@
 
     <div id="toast-container"></div>
 
-    <!-- Banned Screen -->
     <div id="ban-overlay">
         <h1 style="font-size: 2rem; font-weight: 900;">🚫 GEBANNT</h1>
-        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde dauerhaft von ymt Loops gesperrt.</p>
+        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde dauerhaft gesperrt.</p>
     </div>
 
-    <!-- Onboarding Modal (Username-Eingabe) -->
     <div id="onboarding-modal" class="modal">
         <div class="modal-content">
             <div class="logo">
                 <span class="logo-icon">∞</span> ymt Loops
             </div>
             <h2>Willkommen!</h2>
-            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen eindeutigen Usernamen. Dieser wird fest auf deinem Gerät gespeichert.</p>
+            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen Usernamen. Er wird lokal auf deinem Gerät gespeichert.</p>
             <input type="text" id="setup-username" placeholder="z. B. ymtmanuel...">
             <button class="btn-primary" onclick="registerUser()">Starten</button>
         </div>
     </div>
 
-    <!-- Header -->
     <header>
         <div class="logo">
             <span class="logo-icon">∞</span> ymt Loops
@@ -361,7 +353,6 @@
     </header>
 
     <main>
-        <!-- Admin Panel -->
         <div id="admin-panel" class="admin-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel</span>
@@ -371,13 +362,11 @@
             <div id="reported-list"></div>
         </div>
 
-        <!-- Feed -->
         <div id="feed">
             <p style="text-align: center; color: #666; margin-top: 40px;">Lade Loops...</p>
         </div>
     </main>
 
-    <!-- Upload Modal -->
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Loop</h2>
@@ -392,11 +381,9 @@
     </div>
 
     <script>
-        // --- REALTIME DATABASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
             authDomain: "pigeon-1e2cd.firebaseapp.com",
-            databaseURL: "https://pigeon-1e2cd-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "pigeon-1e2cd",
             storageBucket: "pigeon-1e2cd.firebasestorage.app",
             messagingSenderId: "538627864447",
@@ -405,11 +392,10 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const db = firebase.firestore();
 
         let currentUser = localStorage.getItem("ymt_username") || "";
 
-        // --- TOAST NOTIFICATIONS (Ersatz für alert) ---
         function showToast(message, type = "normal") {
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
@@ -419,7 +405,6 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // --- BAN CHECK ---
         function checkBanStatus() {
             if (localStorage.getItem("ymt_banned") === "true") {
                 document.getElementById("ban-overlay").style.display = "flex";
@@ -427,7 +412,6 @@
         }
         checkBanStatus();
 
-        // --- USER SYSTEM INITIALISIERUNG ---
         function initUserSystem() {
             if (!currentUser) {
                 openModal('onboarding-modal');
@@ -450,18 +434,14 @@
                 return;
             }
 
-            const nameRef = db.ref(`usernames/${input}`);
-            const snapshot = await nameRef.once("value");
+            const doc = await db.collection("usernames").doc(input).get();
 
-            if (snapshot.exists()) {
+            if (doc.exists) {
                 showToast("🚫 Dieser Username ist bereits vergeben!", "error");
                 return;
             }
 
-            // Name in Firebase reservieren
-            await nameRef.set({ registeredAt: Date.now() });
-            
-            // Name lokal speichern
+            await db.collection("usernames").doc(input).set({ registeredAt: Date.now() });
             localStorage.setItem("ymt_username", input);
             currentUser = input;
 
@@ -470,22 +450,17 @@
             showToast(`Willkommen, @${currentUser}! 🎉`, "success");
         }
 
-        // --- FEED LADEN ---
         function loadFeed() {
             const feedContainer = document.getElementById("feed");
-            db.ref("loops").on("value", snapshot => {
+            db.collection("loops").orderBy("timestamp", "desc").onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
-                if (!snapshot.exists()) {
+                if (snapshot.empty) {
                     feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Loops da. Sei der Erste!</p>';
                     return;
                 }
 
-                const loops = [];
-                snapshot.forEach(child => {
-                    loops.unshift({ id: child.key, ...child.val() });
-                });
-
-                loops.forEach(data => {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
                     const likes = data.likes || 0;
                     const isVerified = (data.username === "ymtmanuel");
                     const badge = isVerified ? '<span class="verified-badge" title="Verifiziert">☑️</span>' : '';
@@ -502,10 +477,10 @@
                             </div>
                             <div class="loop-title">${escapeHtml(data.title)}</div>
                             <div class="actions">
-                                <button class="like-btn" onclick="likeVideo('${data.id}', ${likes})">
+                                <button class="like-btn" onclick="likeVideo('${doc.id}', ${likes})">
                                     ❤️ <span>${likes}</span>
                                 </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="reportVideo('${data.id}')">🚩 Melden</button>
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="reportVideo('${doc.id}')">🚩 Melden</button>
                             </div>
                         </div>
                     `;
@@ -514,12 +489,10 @@
             });
         }
 
-        // --- LIKE FUNKTION ---
-        function likeVideo(videoId, currentLikes) {
-            db.ref(`loops/${videoId}`).update({ likes: currentLikes + 1 });
+        async function likeVideo(videoId, currentLikes) {
+            await db.collection("loops").doc(videoId).update({ likes: currentLikes + 1 });
         }
 
-        // --- UPLOAD FUNKTION ---
         async function uploadVideo() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -549,12 +522,12 @@
                 reader.onload = async function(e) {
                     const videoBase64 = e.target.result;
 
-                    await db.ref("loops").push({
+                    await db.collection("loops").add({
                         username: currentUser,
                         title: rawTitle,
                         url: videoBase64,
                         likes: 0,
-                        timestamp: Date.now(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                         reported: false
                     });
 
@@ -568,13 +541,11 @@
             };
         }
 
-        // --- MELDE-FUNKTION ---
-        function reportVideo(videoId) {
-            db.ref(`loops/${videoId}`).update({ reported: true });
+        async function reportVideo(videoId) {
+            await db.collection("loops").doc(videoId).update({ reported: true });
             showToast("Video wurde an ymtmanuel gemeldet.", "normal");
         }
 
-        // --- ADMIN PANEL ---
         function toggleAdmin() {
             const panel = document.getElementById("admin-panel");
             if (panel.style.display === "block") {
@@ -587,22 +558,22 @@
 
         function loadReportedVideos() {
             const list = document.getElementById("reported-list");
-            db.ref("loops").orderByChild("reported").equalTo(true).on("value", snapshot => {
+            db.collection("loops").where("reported", "==", true).onSnapshot(snapshot => {
                 list.innerHTML = "";
-                if (!snapshot.exists()) {
+                if (snapshot.empty) {
                     list.innerHTML = '<p style="font-size:0.85rem; color:#aaa;">Keine gemeldeten Videos.</p>';
                     return;
                 }
 
-                snapshot.forEach(child => {
-                    const data = child.val();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
                     const item = document.createElement("div");
                     item.style.cssText = "background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color);";
                     item.innerHTML = `
                         <p><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</p>
                         <div style="margin-top: 8px; display:flex; gap:8px;">
-                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="banAndDelete('${child.key}', '${data.username}')">Löschen & Bannen</button>
-                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="ignoreReport('${child.key}')">Ignorieren</button>
+                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="banAndDelete('${doc.id}', '${data.username}')">Löschen & Bannen</button>
+                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="ignoreReport('${doc.id}')">Ignorieren</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -611,15 +582,11 @@
         }
 
         async function banAndDelete(videoId, usernameToFree) {
-            // Video löschen
-            await db.ref(`loops/${videoId}`).remove();
-            
-            // Username in DB wieder freigeben
+            await db.collection("loops").doc(videoId).delete();
             if (usernameToFree) {
-                await db.ref(`usernames/${usernameToFree}`).remove();
+                await db.collection("usernames").doc(usernameToFree).delete();
             }
 
-            // Falls der gebannte Nutzer der aktuelle ist (Beispiel)
             if (currentUser === usernameToFree) {
                 localStorage.setItem("ymt_banned", "true");
                 checkBanStatus();
@@ -628,8 +595,8 @@
             showToast("Video gelöscht und User gebannt!", "success");
         }
 
-        function ignoreReport(videoId) {
-            db.ref(`loops/${videoId}`).update({ reported: false });
+        async function ignoreReport(videoId) {
+            await db.collection("loops").doc(videoId).update({ reported: false });
             showToast("Meldung verworfen.", "normal");
         }
 
