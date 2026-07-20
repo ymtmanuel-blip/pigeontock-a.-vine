@@ -5,25 +5,23 @@
     <title>PigVin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Dein bewährtes Design */
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&display=swap');
-        body { background: #000; color: #fff; font-family: 'Space Grotesk', sans-serif; }
+        body { background: #000; color: #fff; margin: 0; }
         .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
-        .slide { height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; background: #000; }
+        .slide { height: 100vh; scroll-snap-align: start; display: flex; align-items: center; justify-content: center; }
         video { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <div id="feed" class="feed"></div>
+    <div id="feed" class="feed">
+        <!-- Videos landen hier -->
+    </div>
 
-    <nav class="fixed bottom-0 w-full bg-black border-t border-zinc-800 p-4 flex justify-around">
-        <button onclick="location.reload()">🏠</button>
-        <button onclick="alert('Suche')">🔍</button>
-        <button onclick="document.getElementById('video-input').click()" class="bg-white text-black px-4 rounded">+</button>
-        <button onclick="alert('Profil')">👤</button>
-    </nav>
-
+    <!-- Upload Button -->
+    <button onclick="document.getElementById('video-input').click()" 
+            class="fixed bottom-20 right-5 bg-white text-black p-4 rounded-full font-bold z-50">
+        +
+    </button>
     <input type="file" id="video-input" class="hidden" accept="video/*">
 
     <script type="module">
@@ -33,10 +31,8 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
-            authDomain: "pigeon-1e2cd.firebaseapp.com",
             projectId: "pigeon-1e2cd",
             storageBucket: "pigeon-1e2cd.firebasestorage.app",
-            messagingSenderId: "538627864447",
             appId: "1:538627864447:web:6453978db81aeb5fbd4c4a"
         };
 
@@ -44,41 +40,32 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // Feed laden
+        // Videos laden
         async function loadFeed() {
             const feed = document.getElementById('feed');
             const q = query(collection(db, "videos"), orderBy("timestamp", "desc"));
-            const querySnapshot = await getDocs(q);
+            const snap = await getDocs(q);
             
             feed.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const slide = document.createElement('div');
-                slide.className = 'slide';
-                slide.innerHTML = `<video src="${data.url}" autoplay loop muted></video>`;
-                feed.appendChild(slide);
+            snap.forEach((doc) => {
+                const vid = document.createElement('div');
+                vid.className = 'slide';
+                vid.innerHTML = `<video src="${doc.data().url}" autoplay loop muted playsinline></video>`;
+                feed.appendChild(vid);
             });
         }
 
-        // Hochladen
+        // Upload
         document.getElementById('video-input').onchange = async (e) => {
             const file = e.target.files[0];
-            if (!file) return;
-
-            const storageRef = ref(storage, 'videos/' + file.name);
+            const storageRef = ref(storage, 'videos/' + Date.now());
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);
-
-            await addDoc(collection(db, "videos"), {
-                url: url,
-                timestamp: new Date()
-            });
-
-            alert("Video hochgeladen!");
+            await addDoc(collection(db, "videos"), { url: url, timestamp: new Date() });
             loadFeed();
         };
 
-        window.onload = loadFeed;
+        loadFeed();
     </script>
 </body>
 </html>
