@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ymt Loops</title>
+    <title>ymt Loops & Posts</title>
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,10 +105,6 @@
             box-shadow: 0 4px 15px var(--accent-glow);
         }
 
-        .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
-        }
-
         .btn-danger {
             background: var(--danger-color);
             color: #fff;
@@ -118,10 +114,6 @@
             background: rgba(255, 255, 255, 0.06);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.12);
         }
 
         main {
@@ -142,24 +134,24 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
-        .video-container {
+        .media-container {
             width: 100%;
             background: #000;
             position: relative;
         }
 
-        video {
+        video, img.post-img {
             width: 100%;
             max-height: 500px;
             display: block;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .loop-info {
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .loop-header {
@@ -192,7 +184,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 4px;
         }
 
         .like-btn {
@@ -204,6 +195,50 @@
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 6px 14px;
+        }
+
+        /* --- KOMMENTAR-STYLING --- */
+        .comments-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.25);
+            padding: 6px 10px;
+            border-radius: 8px;
+            word-break: break-word;
+        }
+
+        .comment-user {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .comment-input-box {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .comment-input-box input {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.85rem;
         }
 
         .modal {
@@ -231,11 +266,6 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
-        .modal-content h2 {
-            font-size: 1.4rem;
-            font-weight: 800;
-        }
-
         input[type="text"], input[type="file"] {
             width: 100%;
             padding: 12px 16px;
@@ -245,11 +275,6 @@
             color: #fff;
             font-size: 0.95rem;
             outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--accent-color);
         }
 
         #ban-overlay {
@@ -297,27 +322,14 @@
             border-radius: 14px;
             font-weight: 600;
             font-size: 0.9rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
             animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .toast.success { border-color: var(--accent-color); }
         .toast.error { border-color: var(--danger-color); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(20px); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
     </style>
 </head>
 <body>
@@ -326,28 +338,24 @@
 
     <div id="ban-overlay">
         <h1 style="font-size: 2rem; font-weight: 900;">🚫 GEBANNT</h1>
-        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde dauerhaft gesperrt.</p>
+        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde gesperrt.</p>
     </div>
 
     <div id="onboarding-modal" class="modal">
         <div class="modal-content">
-            <div class="logo">
-                <span class="logo-icon">∞</span> ymt Loops
-            </div>
+            <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
             <h2>Willkommen!</h2>
-            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen Usernamen. Er wird lokal auf deinem Gerät gespeichert.</p>
+            <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen Usernamen:</p>
             <input type="text" id="setup-username" placeholder="z. B. ymtmanuel...">
             <button class="btn-primary" onclick="registerUser()">Starten</button>
         </div>
     </div>
 
     <header>
-        <div class="logo">
-            <span class="logo-icon">∞</span> ymt Loops
-        </div>
+        <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
         <div style="display: flex; gap: 8px; align-items: center;">
             <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
-            <button class="btn-primary" onclick="openModal('upload-modal')">+ Upload</button>
+            <button class="btn-primary" onclick="openModal('upload-modal')">+ Posten</button>
             <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin</button>
         </div>
     </header>
@@ -358,24 +366,23 @@
                 <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel</span>
                 <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
             </div>
-            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 10px;">Gemeldete Videos verwalten und Täter bannen:</p>
             <div id="reported-list"></div>
         </div>
 
         <div id="feed">
-            <p style="text-align: center; color: #666; margin-top: 40px;">Lade Loops...</p>
+            <p style="text-align: center; color: #666; margin-top: 40px;">Lade Posts...</p>
         </div>
     </main>
 
     <div id="upload-modal" class="modal">
         <div class="modal-content">
-            <h2>Neuer Loop</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Maximal 20 Sekunden Länge!</p>
-            <input type="text" id="video-title" placeholder="Titel des Loops...">
-            <input type="file" id="video-file" accept="video/*">
+            <h2>Neuer Post</h2>
+            <p style="font-size: 0.8rem; color: #aaa;">Foto oder kurzes Video auswählen</p>
+            <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
+            <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                 <button class="btn-secondary" onclick="closeModal('upload-modal')">Abbrechen</button>
-                <button class="btn-primary" onclick="uploadVideo()">Hochladen</button>
+                <button class="btn-primary" onclick="uploadMedia()">Hochladen</button>
             </div>
         </div>
     </div>
@@ -413,11 +420,8 @@
         checkBanStatus();
 
         function initUserSystem() {
-            if (!currentUser) {
-                openModal('onboarding-modal');
-            } else {
-                updateUserUI();
-            }
+            if (!currentUser) openModal('onboarding-modal');
+            else updateUserUI();
         }
 
         function updateUserUI() {
@@ -429,22 +433,14 @@
 
         async function registerUser() {
             const input = document.getElementById("setup-username").value.trim().toLowerCase();
-            if (!input) {
-                showToast("Bitte gib einen Namen ein!", "error");
-                return;
-            }
+            if (!input) return showToast("Bitte Username eingeben!", "error");
 
             const doc = await db.collection("usernames").doc(input).get();
-
-            if (doc.exists) {
-                showToast("🚫 Dieser Username ist bereits vergeben!", "error");
-                return;
-            }
+            if (doc.exists) return showToast("Username vergeben!", "error");
 
             await db.collection("usernames").doc(input).set({ registeredAt: Date.now() });
             localStorage.setItem("ymt_username", input);
             currentUser = input;
-
             closeModal('onboarding-modal');
             updateUserUI();
             showToast(`Willkommen, @${currentUser}! 🎉`, "success");
@@ -455,7 +451,7 @@
             db.collection("loops").orderBy("timestamp", "desc").onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
-                    feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Loops da. Sei der Erste!</p>';
+                    feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Posts da.</p>';
                     return;
                 }
 
@@ -463,14 +459,21 @@
                     const data = doc.data();
                     const likes = data.likes || 0;
                     const isVerified = (data.username === "ymtmanuel");
-                    const badge = isVerified ? '<span class="verified-badge" title="Verifiziert">☑️</span>' : '';
+                    const badge = isVerified ? '<span class="verified-badge">☑️</span>' : '';
+                    const isVideo = data.type === "video";
+
+                    const commentsHtml = (data.comments || []).map(c => 
+                        `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
+                    ).join('');
+
+                    const mediaElement = isVideo 
+                        ? `<video src="${data.url}" controls loop playsinline></video>`
+                        : `<img src="${data.url}" class="post-img" alt="Meme/Foto" />`;
 
                     const card = document.createElement("div");
                     card.className = "loop-card";
                     card.innerHTML = `
-                        <div class="video-container">
-                            <video src="${data.url}" controls loop playsinline></video>
-                        </div>
+                        <div class="media-container">${mediaElement}</div>
                         <div class="loop-info">
                             <div class="loop-header">
                                 <span class="loop-author">@${escapeHtml(data.username || 'Anonym')} ${badge}</span>
@@ -482,114 +485,122 @@
                                 </button>
                                 <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="reportVideo('${doc.id}')">🚩 Melden</button>
                             </div>
+                            <!-- KOMMENTARBEREICH -->
+                            <div class="comments-section">
+                                <div class="comment-list">${commentsHtml}</div>
+                                <div class="comment-input-box">
+                                    <input type="text" id="cmt-input-${doc.id}" placeholder="Kommentar schreiben...">
+                                    <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addComment('${doc.id}')">Send</button>
+                                </div>
+                            </div>
                         </div>
                     `;
                     feedContainer.appendChild(card);
                 });
-            }, err => {
-                console.error(err);
-                showToast("Fehler beim Laden des Feeds", "error");
             });
         }
 
-        async function likeVideo(videoId, currentLikes) {
-            await db.collection("loops").doc(videoId).update({ likes: currentLikes + 1 });
+        async function likeVideo(id, currentLikes) {
+            await db.collection("loops").doc(id).update({ likes: currentLikes + 1 });
         }
 
-        // --- UPLOAD MIT LÄNGENCHECK (MAX 20 SEC) & DATENCHECK ---
-        async function uploadVideo() {
+        // --- KOMMENTAR HINZUFÜGEN (VERBRAUCHT FAST 0 KB) ---
+        async function addComment(docId) {
+            const input = document.getElementById(`cmt-input-${docId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const newComment = {
+                user: currentUser || "Anonym",
+                text: text,
+                time: Date.now()
+            };
+
+            await db.collection("loops").doc(docId).update({
+                comments: firebase.firestore.FieldValue.arrayUnion(newComment)
+            });
+
+            input.value = "";
+            showToast("Kommentar gepostet! 💬", "success");
+        }
+
+        // --- UPLOAD FÜR FOTOS UND VIDEOS ---
+        async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
             const rawTitle = titleInput.value.trim();
 
             if (!rawTitle || !fileInput.files[0]) {
-                showToast("Bitte Titel und Video auswählen!", "error");
-                return;
+                return showToast("Titel und Datei auswählen!", "error");
             }
 
             const file = fileInput.files[0];
-            const tempVideo = document.createElement('video');
-            tempVideo.preload = 'metadata';
-            tempVideo.src = URL.createObjectURL(file);
+            const isVideo = file.type.startsWith('video/');
+            const isImage = file.type.startsWith('image/');
 
-            tempVideo.onloadedmetadata = async function() {
-                window.URL.revokeObjectURL(tempVideo.src);
+            if (!isVideo && !isImage) {
+                return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
+            }
 
-                // Check: Maximal 20 Sekunden
-                if (tempVideo.duration > 20) {
-                    showToast("🚫 Das Video ist länger als 20 Sekunden!", "error");
-                    return;
+            showToast("Verarbeite Datei...", "normal");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
+
+                // Max 1MB Limit für Firestore Dokument
+                if (base64Data.length > 1048576) {
+                    return showToast("🚫 Datei ist zu groß (>1MB)! Bitte kleineres Bild/Video wählen.", "error");
                 }
 
-                showToast("Komprimiere & Speichere Video...", "normal");
+                try {
+                    await db.collection("loops").add({
+                        username: currentUser,
+                        title: rawTitle,
+                        url: base64Data,
+                        type: isVideo ? "video" : "image",
+                        likes: 0,
+                        comments: [],
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        reported: false
+                    });
 
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const base64Data = e.target.result;
-
-                    // Firestore Dokument-Größen-Prüfung (Max 1MB per Document)
-                    if (base64Data.length > 1048576) {
-                        showToast("🚫 Video-Datei ist trotz Kürze zu hochauflösend (>1MB)! Bitte Auflösung reduzieren.", "error");
-                        return;
-                    }
-
-                    try {
-                        await db.collection("loops").add({
-                            username: currentUser,
-                            title: rawTitle,
-                            url: base64Data,
-                            likes: 0,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                            reported: false
-                        });
-
-                        showToast("Loop erfolgreich hochgeladen! 🚀", "success");
-                        closeModal('upload-modal');
-                        titleInput.value = "";
-                        fileInput.value = "";
-                    } catch (err) {
-                        console.error("Firestore Error:", err);
-                        showToast("Fehler beim Speichern in Firestore!", "error");
-                    }
-                };
-
-                reader.readAsDataURL(file);
+                    showToast("Post erfolgreich erstellt! 🚀", "success");
+                    closeModal('upload-modal');
+                    titleInput.value = "";
+                    fileInput.value = "";
+                } catch (err) {
+                    showToast("Fehler beim Speichern!", "error");
+                }
             };
+
+            reader.readAsDataURL(file);
         }
 
-        async function reportVideo(videoId) {
-            await db.collection("loops").doc(videoId).update({ reported: true });
-            showToast("Video wurde an ymtmanuel gemeldet.", "normal");
+        async function reportVideo(id) {
+            await db.collection("loops").doc(id).update({ reported: true });
+            showToast("Beitrag gemeldet.", "normal");
         }
 
         function toggleAdmin() {
             const panel = document.getElementById("admin-panel");
-            if (panel.style.display === "block") {
-                panel.style.display = "none";
-            } else {
-                panel.style.display = "block";
-                loadReportedVideos();
-            }
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+            if (panel.style.display === "block") loadReportedVideos();
         }
 
         function loadReportedVideos() {
             const list = document.getElementById("reported-list");
             db.collection("loops").where("reported", "==", true).onSnapshot(snapshot => {
-                list.innerHTML = "";
-                if (snapshot.empty) {
-                    list.innerHTML = '<p style="font-size:0.85rem; color:#aaa;">Keine gemeldeten Videos.</p>';
-                    return;
-                }
-
+                list.innerHTML = snapshot.empty ? '<p style="font-size:0.85rem; color:#aaa;">Keine Meldungen.</p>' : '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const item = document.createElement("div");
-                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border-color);";
+                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 8px;";
                     item.innerHTML = `
                         <p><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</p>
-                        <div style="margin-top: 8px; display:flex; gap:8px;">
-                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="banAndDelete('${doc.id}', '${data.username}')">Löschen & Bannen</button>
-                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="ignoreReport('${doc.id}')">Ignorieren</button>
+                        <div style="margin-top: 6px; display:flex; gap:6px;">
+                            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.8rem;" onclick="banAndDelete('${doc.id}', '${data.username}')">Löschen & Bannen</button>
+                            <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="ignoreReport('${doc.id}')">Ignorieren</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -597,30 +608,20 @@
             });
         }
 
-        async function banAndDelete(videoId, usernameToFree) {
-            await db.collection("loops").doc(videoId).delete();
-            if (usernameToFree) {
-                await db.collection("usernames").doc(usernameToFree).delete();
-            }
-
-            if (currentUser === usernameToFree) {
-                localStorage.setItem("ymt_banned", "true");
-                checkBanStatus();
-            }
-
-            showToast("Video gelöscht und User gebannt!", "success");
+        async function banAndDelete(docId, username) {
+            await db.collection("loops").doc(docId).delete();
+            if (username) await db.collection("usernames").doc(username).delete();
+            showToast("Gelöscht & Gebannt!", "success");
         }
 
-        async function ignoreReport(videoId) {
-            await db.collection("loops").doc(videoId).update({ reported: false });
-            showToast("Meldung verworfen.", "normal");
+        async function ignoreReport(docId) {
+            await db.collection("loops").doc(docId).update({ reported: false });
+            showToast("Meldung ignoriert.", "normal");
         }
 
         function openModal(id) { document.getElementById(id).style.display = "flex"; }
         function closeModal(id) { document.getElementById(id).style.display = "none"; }
-        function escapeHtml(text) {
-            return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
-        }
+        function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
 
         initUserSystem();
         loadFeed();
