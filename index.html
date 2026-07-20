@@ -370,7 +370,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Loop</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Kurzes Video auswählen</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Maximal 20 Sekunden Länge!</p>
             <input type="text" id="video-title" placeholder="Titel des Loops...">
             <input type="file" id="video-file" accept="video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -496,7 +496,7 @@
             await db.collection("loops").doc(videoId).update({ likes: currentLikes + 1 });
         }
 
-        // --- SCHNELLE VIDEO-KOMPRIMIERUNG VOR DEM UPLOAD ---
+        // --- UPLOAD MIT LÄNGENCHECK (MAX 20 SEC) & DATENCHECK ---
         async function uploadVideo() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -508,39 +508,53 @@
             }
 
             const file = fileInput.files[0];
-            showToast("Verarbeite Video...", "normal");
+            const tempVideo = document.createElement('video');
+            tempVideo.preload = 'metadata';
+            tempVideo.src = URL.createObjectURL(file);
 
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Data = e.target.result;
+            tempVideo.onloadedmetadata = async function() {
+                window.URL.revokeObjectURL(tempVideo.src);
 
-                // Prüfen ob die Datei nach dem Konvertieren unter 1MB ist
-                if (base64Data.length > 1048576) {
-                    showToast("🚫 Video ist zu groß für Firestore! Bitte nimm ein kürzeres Video (unter ~5 Sek).", "error");
+                // Check: Maximal 20 Sekunden
+                if (tempVideo.duration > 20) {
+                    showToast("🚫 Das Video ist länger als 20 Sekunden!", "error");
                     return;
                 }
 
-                try {
-                    await db.collection("loops").add({
-                        username: currentUser,
-                        title: rawTitle,
-                        url: base64Data,
-                        likes: 0,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        reported: false
-                    });
+                showToast("Komprimiere & Speichere Video...", "normal");
 
-                    showToast("Loop dauerhaft gespeichert! 🚀", "success");
-                    closeModal('upload-modal');
-                    titleInput.value = "";
-                    fileInput.value = "";
-                } catch (err) {
-                    console.error("Firestore Error:", err);
-                    showToast("Fehler beim Speichern in Firestore!", "error");
-                }
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Data = e.target.result;
+
+                    // Firestore Dokument-Größen-Prüfung (Max 1MB per Document)
+                    if (base64Data.length > 1048576) {
+                        showToast("🚫 Video-Datei ist trotz Kürze zu hochauflösend (>1MB)! Bitte Auflösung reduzieren.", "error");
+                        return;
+                    }
+
+                    try {
+                        await db.collection("loops").add({
+                            username: currentUser,
+                            title: rawTitle,
+                            url: base64Data,
+                            likes: 0,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            reported: false
+                        });
+
+                        showToast("Loop erfolgreich hochgeladen! 🚀", "success");
+                        closeModal('upload-modal');
+                        titleInput.value = "";
+                        fileInput.value = "";
+                    } catch (err) {
+                        console.error("Firestore Error:", err);
+                        showToast("Fehler beim Speichern in Firestore!", "error");
+                    }
+                };
+
+                reader.readAsDataURL(file);
             };
-
-            reader.readAsDataURL(file);
         }
 
         async function reportVideo(videoId) {
