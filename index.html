@@ -83,16 +83,25 @@
             -webkit-text-fill-color: initial;
         }
 
-        main {
+        /* Views management */
+        .app-view {
             width: 100%;
             max-width: 500px;
             height: 100vh;
             margin: 0 auto;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            display: flex;
-            flex-direction: column;
+            display: none;
             padding-bottom: 70px;
+            overflow-y: auto;
+        }
+
+        .app-view.active {
+            display: block;
+        }
+
+        /* Feed Tab */
+        #feed-view {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
         }
 
         .loop-card {
@@ -144,17 +153,8 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        .verified-badge {
-            color: var(--verified-color);
-            font-size: 1rem;
-        }
-
-        .loop-title {
-            font-size: 0.95rem;
-            color: #f0f2f5;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            line-height: 1.3;
-        }
+        .verified-badge { color: var(--verified-color); font-size: 1rem; }
+        .loop-title { font-size: 0.95rem; color: #f0f2f5; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.3; }
 
         .actions-right {
             position: absolute;
@@ -197,6 +197,77 @@
         .action-icon-btn:active { transform: scale(0.9); }
         .action-icon-btn.liked { background: rgba(255, 51, 102, 0.3); border-color: var(--danger-color); color: var(--danger-color); }
 
+        /* Explore & Profile Grid */
+        .view-header {
+            padding: 70px 20px 15px 20px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            padding: 2px;
+        }
+
+        .grid-item {
+            aspect-ratio: 9 / 16;
+            background: #161822;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .grid-item img, .grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .grid-type-badge {
+            position: absolute;
+            top: 6px; right: 6px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Profile Header */
+        .profile-card {
+            padding: 80px 20px 20px 20px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(22,24,34,0.5), transparent);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00d2ff);
+            margin: 0 auto 12px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #000;
+            font-weight: 900;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 15px;
+        }
+
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-val { font-weight: 800; font-size: 1.1rem; }
+        .stat-lbl { font-size: 0.75rem; color: #888; }
+
+        /* Comments Drawer */
         .comments-drawer {
             position: fixed;
             bottom: 0; left: 50%;
@@ -242,11 +313,7 @@
             word-break: break-word;
         }
 
-        .comment-user {
-            color: var(--accent-color);
-            font-weight: 600;
-            margin-right: 6px;
-        }
+        .comment-user { color: var(--accent-color); font-weight: 600; margin-right: 6px; }
 
         .comment-input-area {
             padding: 12px 16px;
@@ -267,6 +334,7 @@
             font-size: 0.9rem;
         }
 
+        /* Nav Bar */
         nav.tiktok-nav {
             position: fixed;
             bottom: 0;
@@ -321,8 +389,7 @@
 
         .peeking-pigeon {
             position: absolute;
-            top: -22px;
-            left: 50%;
+            top: -22px; left: 50%;
             transform: translateX(-50%) translateY(25px);
             font-size: 1.2rem;
             pointer-events: none;
@@ -330,10 +397,7 @@
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
 
-        .peeking-pigeon.peek {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .peeking-pigeon.peek { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         .modal {
             display: none;
@@ -376,33 +440,9 @@
         .btn-danger { background: var(--danger-color); color: #fff; }
         .btn-secondary { background: rgba(255, 255, 255, 0.06); color: var(--text-color); border: 1px solid var(--border-color); }
 
-        #ban-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: #0b0000;
-            color: var(--danger-color);
-            z-index: 9999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .admin-panel {
-            background: rgba(0, 255, 136, 0.05);
-            border: 1px solid var(--accent-color);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
         #toast-container {
             position: fixed;
-            top: 20px;
-            left: 50%;
+            top: 20px; left: 50%;
             transform: translateX(-50%);
             z-index: 5000;
             display: flex;
@@ -435,11 +475,6 @@
 
     <div id="toast-container"></div>
 
-    <div id="ban-overlay">
-        <h1 style="font-size: 2rem; font-weight: 900;">🚫 GEBANNT</h1>
-        <p style="margin-top: 10px; color: #aaa;">Dieses Gerät wurde gesperrt.</p>
-    </div>
-
     <div id="onboarding-modal" class="modal">
         <div class="modal-content">
             <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
@@ -458,18 +493,39 @@
         </div>
     </header>
 
-    <div id="admin-panel" class="admin-panel" style="position: absolute; top: 60px; left: 10px; right: 10px; z-index: 250;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <span style="color: var(--accent-color); font-weight:bold;">🛡️ Admin-Freigabe (Pending)</span>
-            <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
-        </div>
-        <div id="pending-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;"></div>
-    </div>
-
-    <main id="feed">
+    <!-- VIEWS -->
+    <!-- 1. FEED VIEW -->
+    <main id="feed-view" class="app-view active">
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: #666;">Lade Loops...</div>
     </main>
 
+    <!-- 2. EXPLORE VIEW -->
+    <div id="explore-view" class="app-view">
+        <div class="view-header">🧭 Entdecken</div>
+        <div class="grid-container" id="explore-grid">
+            <p style="padding:20px; color:#666; grid-column: span 3;">Lade Medien...</p>
+        </div>
+    </div>
+
+    <!-- 3. PROFILE VIEW -->
+    <div id="profile-view" class="app-view">
+        <div class="profile-card">
+            <div class="profile-avatar" id="prof-avatar-letter">U</div>
+            <h2 id="prof-username">@username</h2>
+            <div class="profile-stats">
+                <div class="stat-box">
+                    <span class="stat-val" id="prof-count-posts">0</span>
+                    <span class="stat-lbl">Posts</span>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 10px 20px; font-weight: bold; border-bottom: 1px solid var(--border-color);">Deine Uploads</div>
+        <div class="grid-container" id="profile-grid">
+            <p style="padding:20px; color:#666; grid-column: span 3;">Keine eigenen Uploads.</p>
+        </div>
+    </div>
+
+    <!-- COMMENTS DRAWER -->
     <div id="comments-drawer" class="comments-drawer">
         <div class="comments-header">
             <span>Kommentare</span>
@@ -482,10 +538,11 @@
         </div>
     </div>
 
+    <!-- UPLOAD MODAL -->
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Maximal 800 KB (ohne Storage). Uploads werden vom Admin geprüft.</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Maximal ~800 KB (ohne Storage). Uploads werden vom Admin geprüft.</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -495,12 +552,13 @@
         </div>
     </div>
 
+    <!-- NAVIGATION -->
     <nav class="tiktok-nav">
-        <button class="nav-item active">
+        <button class="nav-item active" onclick="switchTab('feed-view', this)">
             <span class="nav-icon">🏠</span>
             <span>Home</span>
         </button>
-        <button class="nav-item" onclick="showToast('Entdecken kommt bald!', 'normal')">
+        <button class="nav-item" onclick="switchTab('explore-view', this)">
             <span class="nav-icon">🧭</span>
             <span>Entdecken</span>
         </button>
@@ -514,13 +572,13 @@
             <span class="nav-icon">📥</span>
             <span>Postfach</span>
         </button>
-        <button class="nav-item" onclick="showToast('Profil aktiv', 'normal')">
+        <button class="nav-item" onclick="switchTab('profile-view', this)">
             <span class="nav-icon">👤</span>
             <span>Profil</span>
         </button>
     </nav>
 
-    <!-- HIER BEGINNT DER JAVASCRIPT BEREICH -->
+    <!-- JAVASCRIPT CODE -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
@@ -547,25 +605,16 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        function startPigeonPeeking() {
-            const pigeon = document.getElementById("peeking-pigeon");
-            if (!pigeon) return;
+        function switchTab(viewId, btn) {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            if(btn) btn.classList.add('active');
 
-            setInterval(() => {
-                pigeon.classList.add("peek");
-                setTimeout(() => {
-                    pigeon.classList.remove("peek");
-                }, 1200);
-            }, 5000);
+            if (viewId === 'explore-view') loadExploreGrid();
+            if (viewId === 'profile-view') loadProfileView();
         }
-        startPigeonPeeking();
-
-        function checkBanStatus() {
-            if (localStorage.getItem("ymt_banned") === "true") {
-                document.getElementById("ban-overlay").style.display = "flex";
-            }
-        }
-        checkBanStatus();
 
         function initUserSystem() {
             if (!currentUser) openModal('onboarding-modal');
@@ -574,31 +623,34 @@
 
         function updateUserUI() {
             document.getElementById("current-user-display").innerText = `@${currentUser}`;
-            if (currentUser === "ymtmanuel") {
-                document.getElementById("admin-btn").style.display = "inline-block";
-            }
+            document.getElementById("prof-username").innerText = `@${currentUser}`;
+            document.getElementById("prof-avatar-letter").innerText = currentUser.charAt(0).toUpperCase();
         }
 
         async function registerUser() {
             const input = document.getElementById("setup-username").value.trim().toLowerCase();
             if (!input) return showToast("Bitte Username eingeben!", "error");
 
-            const doc = await db.collection("usernames").doc(input).get();
-            if (doc.exists) return showToast("Username vergeben!", "error");
+            try {
+                const doc = await db.collection("usernames").doc(input).get();
+                if (doc.exists) return showToast("Username vergeben!", "error");
 
-            await db.collection("usernames").doc(input).set({ registeredAt: Date.now() });
-            localStorage.setItem("ymt_username", input);
-            currentUser = input;
-            closeModal('onboarding-modal');
-            updateUserUI();
-            showToast(`Willkommen, @${currentUser}! 🎉`, "success");
+                await db.collection("usernames").doc(input).set({ registeredAt: Date.now() });
+                localStorage.setItem("ymt_username", input);
+                currentUser = input;
+                closeModal('onboarding-modal');
+                updateUserUI();
+                showToast(`Willkommen, @${currentUser}! 🎉`, "success");
+            } catch(e) {
+                showToast("Fehler bei der Registrierung!", "error");
+            }
         }
 
+        // FEED LADEN (Ohne Firestore-Index-Sperre!)
         function loadFeed() {
-            const feedContainer = document.getElementById("feed");
+            const feedContainer = document.getElementById("feed-view");
             db.collection("loops")
               .where("status", "==", "approved")
-              .orderBy("timestamp", "desc")
               .onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
@@ -606,8 +658,12 @@
                     return;
                 }
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                // In JS sortieren, um Firestore Index-Fehler zu vermeiden
+                let docs = [];
+                snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+                docs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+                docs.forEach(data => {
                     const likesList = data.likesList || [];
                     const hasLiked = likesList.includes(currentUser);
                     const comments = data.comments || [];
@@ -625,11 +681,11 @@
                         <div class="media-container">${mediaElement}</div>
                         
                         <div class="actions-right">
-                            <button class="action-item" onclick="toggleLike('${doc.id}')">
+                            <button class="action-item" onclick="toggleLike('${data.id}')">
                                 <div class="action-icon-btn ${hasLiked ? 'liked' : ''}">❤️</div>
                                 <span>${likesList.length}</span>
                             </button>
-                            <button class="action-item" onclick="openComments('${doc.id}')">
+                            <button class="action-item" onclick="openComments('${data.id}')">
                                 <div class="action-icon-btn">💬</div>
                                 <span>${comments.length}</span>
                             </button>
@@ -641,6 +697,60 @@
                         </div>
                     `;
                     feedContainer.appendChild(card);
+                });
+            }, err => {
+                showToast("Firestore Fehler beim Laden!", "error");
+            });
+        }
+
+        // ENTDECKEN TAB GRID
+        function loadExploreGrid() {
+            const grid = document.getElementById("explore-grid");
+            db.collection("loops").where("status", "==", "approved").get().then(snapshot => {
+                grid.innerHTML = "";
+                if (snapshot.empty) {
+                    grid.innerHTML = '<p style="padding:20px; color:#666; grid-column: span 3;">Keine Uploads vorhanden.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isVideo = data.type === "video";
+                    const item = document.createElement("div");
+                    item.className = "grid-item";
+                    item.innerHTML = `
+                        <span class="grid-type-badge">${isVideo ? '🎥' : '🖼️'}</span>
+                        ${isVideo ? `<video src="${data.url}"></video>` : `<img src="${data.url}" />`}
+                    `;
+                    grid.appendChild(item);
+                });
+            });
+        }
+
+        // PROFIL VIEW
+        function loadProfileView() {
+            const grid = document.getElementById("profile-grid");
+            const postCountEl = document.getElementById("prof-count-posts");
+
+            db.collection("loops").where("username", "==", currentUser).get().then(snapshot => {
+                grid.innerHTML = "";
+                postCountEl.innerText = snapshot.size;
+
+                if (snapshot.empty) {
+                    grid.innerHTML = '<p style="padding:20px; color:#666; grid-column: span 3;">Du hast noch nichts hochgeladen.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isVideo = data.type === "video";
+                    const item = document.createElement("div");
+                    item.className = "grid-item";
+                    item.innerHTML = `
+                        <span class="grid-type-badge">${isVideo ? '🎥' : '🖼️'}</span>
+                        ${isVideo ? `<video src="${data.url}"></video>` : `<img src="${data.url}" />`}
+                    `;
+                    grid.appendChild(item);
                 });
             });
         }
@@ -684,7 +794,7 @@
 
             const comments = doc.data().comments || [];
             if (comments.length === 0) {
-                listContainer.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">Noch keine Kommentare. Schreib den ersten!</p>';
+                listContainer.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">Noch keine Kommentare.</p>';
                 return;
             }
 
@@ -714,7 +824,7 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // NEUE UPLOAD-FUNKTION OHNE STORAGE (Speichert direkt als Base64 in Firestore)
+        // UPLOAD MEDIA (Mit direkter Fehleranzeige)
         function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -732,10 +842,10 @@
                 return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            // FIRESTORE HARD-LIMIT: Max ~800 KB, damit das Dokument unter 1 MB bleibt!
+            // GRENZE: 800 KB wegen Base64 & 1MB Firestore Limit
             const MAX_SIZE = 800 * 1024;
             if (file.size > MAX_SIZE) {
-                return showToast("Datei zu groß! Ohne Storage max. 800 KB.", "error");
+                return showToast("Datei zu groß! Max. 0.8 MB (Ohne Storage).", "error");
             }
 
             showToast("Wandle Datei um... ⏳", "normal");
@@ -768,58 +878,16 @@
                 if (initialStatus === "approved") {
                     showToast("Direkt veröffentlicht! 🚀", "success");
                 } else {
-                    showToast("Eingereicht! Wartet auf Admin-Freigabe ⏳", "success");
+                    showToast("Eingereicht! Wartet auf Freigabe ⏳", "success");
                 }
 
                 closeModal('upload-modal');
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                console.error(err);
+                console.error("Firestore Upload Error:", err);
                 showToast("Fehler beim Speichern in Firestore!", "error");
             }
-        }
-
-        function toggleAdmin() {
-            const panel = document.getElementById("admin-panel");
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
-            if (panel.style.display === "block") loadPendingPosts();
-        }
-
-        function loadPendingPosts() {
-            const list = document.getElementById("pending-list");
-            db.collection("loops").where("status", "==", "pending").onSnapshot(snapshot => {
-                list.innerHTML = snapshot.empty ? '<p style="font-size:0.85rem; color:#aaa;">Keine ausstehenden Posts. Alles sauber! 👍</p>' : '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const isVideo = data.type === "video";
-                    const mediaPreview = isVideo 
-                        ? `<video src="${data.url}" controls style="max-height: 120px; border-radius: 8px;"></video>`
-                        : `<img src="${data.url}" style="max-height: 120px; border-radius: 8px; object-fit: contain;" />`;
-
-                    const item = document.createElement("div");
-                    item.style.cssText = "background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;";
-                    item.innerHTML = `
-                        <div style="font-size:0.85rem;"><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</div>
-                        <div>${mediaPreview}</div>
-                        <div style="display:flex; gap:6px;">
-                            <button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
-                            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
-            });
-        }
-
-        async function approvePost(docId) {
-            await db.collection("loops").doc(docId).update({ status: "approved" });
-            showToast("Freigegeben! 🎉", "success");
-        }
-
-        async function rejectPost(docId) {
-            await db.collection("loops").doc(docId).delete();
-            showToast("Beitrag abgelehnt.", "normal");
         }
 
         function openModal(id) { document.getElementById(id).style.display = "flex"; }
