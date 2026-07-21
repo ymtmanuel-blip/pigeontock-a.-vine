@@ -203,12 +203,11 @@
             color: var(--danger-color);
         }
 
-        /* --- KOMMENTAR-STYLING (EINKLAPPBAR) --- */
         .comments-section {
             border-top: 1px solid var(--border-color);
             padding-top: 10px;
             margin-top: 6px;
-            display: none; /* Standardmäßig ausgeblendet */
+            display: none;
             flex-direction: column;
             gap: 8px;
         }
@@ -298,8 +297,8 @@
         }
 
         .admin-panel {
-            background: rgba(255, 51, 102, 0.05);
-            border: 1px solid var(--danger-color);
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--accent-color);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 20px;
@@ -362,17 +361,18 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
             <button class="btn-primary" onclick="openModal('upload-modal')">+ Posten</button>
-            <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin</button>
+            <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin 🛡️</button>
         </div>
     </header>
 
     <main>
+        <!-- ADMIN MODERATIONSPANEL -->
         <div id="admin-panel" class="admin-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span style="color: var(--danger-color); font-weight:bold;">🛡️ Admin Panel</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="color: var(--accent-color); font-weight:bold;">🛡️ Admin-Freigabe (Pending Posts)</span>
                 <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
             </div>
-            <div id="reported-list"></div>
+            <div id="pending-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
         <div id="feed">
@@ -383,7 +383,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Fotos & Clips (Fotos werden automatisch optimiert)</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Uploads werden vor Veröffentlichung vom Admin geprüft.</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -452,9 +452,13 @@
             showToast(`Willkommen, @${currentUser}! 🎉`, "success");
         }
 
+        // FEEDS LADEN (NUR 'approved' POSTS ZEIGEN)
         function loadFeed() {
             const feedContainer = document.getElementById("feed");
-            db.collection("loops").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+            db.collection("loops")
+              .where("status", "==", "approved")
+              .orderBy("timestamp", "desc")
+              .onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
                     feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Posts da.</p>';
@@ -494,9 +498,7 @@
                                 <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleComments('${doc.id}')">
                                     💬 ${comments.length}
                                 </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; margin-left: auto;" onclick="reportVideo('${doc.id}')">🚩</button>
                             </div>
-                            <!-- EINKLAPPBARER KOMMENTARBEREICH -->
                             <div class="comments-section" id="comments-${doc.id}">
                                 <div class="comment-list">${commentsHtml.length ? commentsHtml : '<p style="font-size:0.8rem; color:#666;">Keine Kommentare</p>'}</div>
                                 <div class="comment-input-box">
@@ -511,7 +513,6 @@
             });
         }
 
-        // --- LIKE FÜR JEDEN USER NUR 1 MAL ---
         async function toggleLike(docId) {
             if (!currentUser) return showToast("Bitte erst anmelden!", "error");
             const docRef = db.collection("loops").doc(docId);
@@ -530,7 +531,6 @@
             }
         }
 
-        // --- KOMMENTARE EIN/AUSKLAPPEN ---
         function toggleComments(docId) {
             const box = document.getElementById(`comments-${docId}`);
             box.style.display = (box.style.display === "flex") ? "none" : "flex";
@@ -555,7 +555,6 @@
             showToast("Gepostet! 💬", "success");
         }
 
-        // --- AUTOMATISCHES FOTO-RESIZING & UPLOAD ---
         async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -573,20 +572,18 @@
                 return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
             }
 
-            showToast("Verarbeite Datei...", "normal");
+            showToast("Wird verarbeitet...", "normal");
 
             if (isImage) {
-                // Fotos automatisch auf max 1024px verkleinern (braucht fast keinen Speicher)
                 compressImage(file, 1024, 0.7, async (base64Data) => {
                     await saveToFirestore(rawTitle, base64Data, "image");
                 });
             } else {
-                // Videos verarbeiten
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     const base64Data = e.target.result;
                     if (base64Data.length > 1048576) {
-                        return showToast("🚫 Video ist zu groß für Firestore! Bitte kürzeres Clip wählen.", "error");
+                        return showToast("🚫 Video ist zu groß für Firestore!", "error");
                     }
                     await saveToFirestore(rawTitle, base64Data, "video");
                 };
@@ -621,8 +618,12 @@
             reader.readAsDataURL(file);
         }
 
+        // POST ALS 'pending' SPEICHERN (Manuel muss erst akzeptieren)
         async function saveToFirestore(title, url, type) {
             try {
+                // Wenn du selbst postest, wird es direkt freigeschaltet. Bei allen anderen geht es in 'pending'.
+                const initialStatus = (currentUser === "ymtmanuel") ? "approved" : "pending";
+
                 await db.collection("loops").add({
                     username: currentUser,
                     title: title,
@@ -630,11 +631,16 @@
                     type: type,
                     likesList: [],
                     comments: [],
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    reported: false
+                    status: initialStatus,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showToast("Post erfolgreich erstellt! 🚀", "success");
+                if (initialStatus === "approved") {
+                    showToast("Dein Post wurde direkt veröffentlicht! 🚀", "success");
+                } else {
+                    showToast("Post eingereicht! Wartet auf Admin-Freigabe ⏳", "success");
+                }
+
                 closeModal('upload-modal');
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
@@ -643,30 +649,32 @@
             }
         }
 
-        async function reportVideo(id) {
-            await db.collection("loops").doc(id).update({ reported: true });
-            showToast("Beitrag gemeldet.", "normal");
-        }
-
         function toggleAdmin() {
             const panel = document.getElementById("admin-panel");
             panel.style.display = panel.style.display === "block" ? "none" : "block";
-            if (panel.style.display === "block") loadReportedVideos();
+            if (panel.style.display === "block") loadPendingPosts();
         }
 
-        function loadReportedVideos() {
-            const list = document.getElementById("reported-list");
-            db.collection("loops").where("reported", "==", true).onSnapshot(snapshot => {
-                list.innerHTML = snapshot.empty ? '<p style="font-size:0.85rem; color:#aaa;">Keine Meldungen.</p>' : '';
+        // LÄDT ALLE UPLOADS, DIE AUF DIE FREIGABE WARTEN
+        function loadPendingPosts() {
+            const list = document.getElementById("pending-list");
+            db.collection("loops").where("status", "==", "pending").onSnapshot(snapshot => {
+                list.innerHTML = snapshot.empty ? '<p style="font-size:0.85rem; color:#aaa;">Keine ausstehenden Posts. Alles sauber! 👍</p>' : '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const isVideo = data.type === "video";
+                    const mediaPreview = isVideo 
+                        ? `<video src="${data.url}" controls style="max-height: 150px; border-radius: 8px;"></video>`
+                        : `<img src="${data.url}" style="max-height: 150px; border-radius: 8px; object-fit: contain;" />`;
+
                     const item = document.createElement("div");
-                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-bottom: 8px;";
+                    item.style.cssText = "background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;";
                     item.innerHTML = `
-                        <p><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</p>
-                        <div style="margin-top: 6px; display:flex; gap:6px;">
-                            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.8rem;" onclick="banAndDelete('${doc.id}', '${data.username}')">Löschen & Bannen</button>
-                            <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="ignoreReport('${doc.id}')">Ignorieren</button>
+                        <div><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</div>
+                        <div>${mediaPreview}</div>
+                        <div style="display:flex; gap:8px; margin-top: 4px;">
+                            <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
+                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -674,15 +682,15 @@
             });
         }
 
-        async function banAndDelete(docId, username) {
-            await db.collection("loops").doc(docId).delete();
-            if (username) await db.collection("usernames").doc(username).delete();
-            showToast("Gelöscht & Gebannt!", "success");
+        // ADMIN-AKTIONEN
+        async function approvePost(docId) {
+            await db.collection("loops").doc(docId).update({ status: "approved" });
+            showToast("Beitrag freigegeben! 🎉", "success");
         }
 
-        async function ignoreReport(docId) {
-            await db.collection("loops").doc(docId).update({ reported: false });
-            showToast("Meldung ignoriert.", "normal");
+        async function rejectPost(docId) {
+            await db.collection("loops").doc(docId).delete();
+            showToast("Beitrag abgelehnt und gelöscht.", "normal");
         }
 
         function openModal(id) { document.getElementById(id).style.display = "flex"; }
