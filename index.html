@@ -9,9 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase Firestore SDK -->
+    <!-- Firebase App (Core) SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase Storage SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
     <style>
         :root {
@@ -383,7 +386,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Uploads werden vor Veröffentlichung vom Admin geprüft.</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Maximal 5 MB. Uploads werden vor Veröffentlichung vom Admin geprüft.</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -406,6 +409,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         let currentUser = localStorage.getItem("ymt_username") || "";
 
@@ -555,6 +559,7 @@
             showToast("Gepostet! 💬", "success");
         }
 
+        // DATEI MIT 5 MB LIMIT HOCHLADEN
         async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -572,56 +577,33 @@
                 return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
             }
 
-            showToast("Wird verarbeitet...", "normal");
+            // Maximale Dateigröße: 5 MB (5 * 1024 * 1024 Bytes)
+            const MAX_SIZE = 5 * 1024 * 1024;
+            if (file.size > MAX_SIZE) {
+                return showToast("Datei ist zu groß! Maximal 5 MB erlaubt.", "error");
+            }
 
-            if (isImage) {
-                compressImage(file, 1024, 0.7, async (base64Data) => {
-                    await saveToFirestore(rawTitle, base64Data, "image");
-                });
-            } else {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const base64Data = e.target.result;
-                    if (base64Data.length > 1048576) {
-                        return showToast("🚫 Video ist zu groß für Firestore!", "error");
-                    }
-                    await saveToFirestore(rawTitle, base64Data, "video");
-                };
-                reader.readAsDataURL(file);
+            showToast("Lade Datei hoch... ⏳", "normal");
+
+            try {
+                const fileName = 'uploads/' + Date.now() + '_' + file.name;
+                const storageRef = storage.ref(fileName);
+                
+                const snapshot = await storageRef.put(file);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+
+                const type = isVideo ? "video" : "image";
+                await saveToFirestore(rawTitle, downloadURL, type);
+
+            } catch (err) {
+                console.error(err);
+                showToast("Fehler beim Hochladen der Datei!", "error");
             }
         }
 
-        function compressImage(file, maxWidth, quality, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement("canvas");
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > maxWidth) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
-                    callback(dataUrl);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // POST ALS 'pending' SPEICHERN (Manuel muss erst akzeptieren)
+        // POST ALS 'pending' SPEICHERN
         async function saveToFirestore(title, url, type) {
             try {
-                // Wenn du selbst postest, wird es direkt freigeschaltet. Bei allen anderen geht es in 'pending'.
                 const initialStatus = (currentUser === "ymtmanuel") ? "approved" : "pending";
 
                 await db.collection("loops").add({
@@ -645,7 +627,7 @@
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                showToast("Fehler beim Speichern!", "error");
+                showToast("Fehler beim Speichern in der Datenbank!", "error");
             }
         }
 
