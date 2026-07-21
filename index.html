@@ -9,9 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase App (Core) SDK -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <!-- Firebase Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
@@ -83,7 +82,6 @@
             -webkit-text-fill-color: initial;
         }
 
-        /* Views management */
         .app-view {
             width: 100%;
             max-width: 500px;
@@ -94,9 +92,7 @@
             overflow-y: auto;
         }
 
-        .app-view.active {
-            display: block;
-        }
+        .app-view.active { display: block; }
 
         /* Feed Tab */
         #feed-view {
@@ -116,27 +112,29 @@
             justify-content: flex-end;
         }
 
+        /* PERFEKTE ANPASSUNG FÜR QUERFORMAT & HOCHFORMAT */
         .media-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #0b0c10;
+            background: #000;
             z-index: 1;
         }
 
         video, img.post-img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain; /* Kein Abschneiden bei Querformat! */
+            background: #000;
         }
 
         .loop-info {
             position: relative;
             z-index: 2;
             padding: 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -243,24 +241,16 @@
         }
 
         .profile-avatar {
-            width: 80px;
-            height: 80px;
+            width: 80px; height: 80px;
             border-radius: 50%;
             background: linear-gradient(135deg, #00ff88, #00d2ff);
             margin: 0 auto 12px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: #000;
-            font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: #000; font-weight: 900;
         }
 
         .profile-stats {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-top: 15px;
+            display: flex; justify-content: center; gap: 24px; margin-top: 15px;
         }
 
         .stat-box { display: flex; flex-direction: column; align-items: center; }
@@ -272,16 +262,12 @@
             position: fixed;
             bottom: 0; left: 50%;
             transform: translateX(-50%) translateY(100%);
-            width: 100%;
-            max-width: 500px;
-            height: 55vh;
+            width: 100%; max-width: 500px; height: 55vh;
             background: #161822;
-            border-top-left-radius: 24px;
-            border-top-right-radius: 24px;
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
             z-index: 300;
             transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1);
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
             border: 1px solid var(--border-color);
             box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
         }
@@ -290,179 +276,134 @@
         .comments-header {
             padding: 14px 20px;
             border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             font-weight: 600;
         }
 
         .comment-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex: 1; overflow-y: auto; padding: 16px;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
         .comment-item {
             font-size: 0.85rem;
             background: rgba(0,0,0,0.25);
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             word-break: break-word;
         }
 
-        .comment-user { color: var(--accent-color); font-weight: 600; margin-right: 6px; }
+        .report-flag-btn {
+            background: none;
+            border: none;
+            color: #777;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+        .report-flag-btn:hover { color: var(--danger-color); }
 
         .comment-input-area {
             padding: 12px 16px;
             background: #0b0c10;
-            display: flex;
-            gap: 8px;
+            display: flex; gap: 8px;
             border-top: 1px solid var(--border-color);
         }
 
         .comment-input-area input {
-            flex: 1;
-            padding: 10px 14px;
+            flex: 1; padding: 10px 14px;
             border-radius: 20px;
             border: 1px solid var(--border-color);
             background: rgba(255,255,255,0.05);
-            color: #fff;
-            outline: none;
-            font-size: 0.9rem;
+            color: #fff; outline: none; font-size: 0.9rem;
         }
+
+        /* Postfach Styling */
+        .inbox-card {
+            background: rgba(22,24,34,0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .inbox-actions { display: flex; gap: 8px; margin-top: 6px; }
 
         /* Nav Bar */
         nav.tiktok-nav {
             position: fixed;
-            bottom: 0;
-            left: 50%;
+            bottom: 0; left: 50%;
             transform: translateX(-50%);
-            width: 100%;
-            max-width: 500px;
-            height: 65px;
+            width: 100%; max-width: 500px; height: 65px;
             background: rgba(11, 12, 16, 0.92);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            display: flex; justify-content: space-around; align-items: center;
             z-index: 200;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
         .nav-item {
-            background: none;
-            border: none;
-            color: #777;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            cursor: pointer;
-            transition: color 0.2s;
+            background: none; border: none;
+            color: #777; font-size: 0.75rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            cursor: pointer; transition: color 0.2s;
         }
         .nav-item.active, .nav-item:hover { color: #fff; }
         .nav-icon { font-size: 1.3rem; }
 
         .upload-nav-btn {
-            position: relative;
-            width: 48px;
-            height: 32px;
+            width: 48px; height: 32px;
             background: linear-gradient(135deg, #00ff88, #00d2ff);
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            font-weight: 900;
-            font-size: 1.2rem;
+            border-radius: 10px; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-weight: 900; font-size: 1.2rem;
             box-shadow: 0 0 15px var(--accent-glow);
-            overflow: visible;
         }
-
-        .peeking-pigeon {
-            position: absolute;
-            top: -22px; left: 50%;
-            transform: translateX(-50%) translateY(25px);
-            font-size: 1.2rem;
-            pointer-events: none;
-            opacity: 0;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
-        }
-
-        .peeking-pigeon.peek { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         .modal {
-            display: none;
-            position: fixed;
+            display: none; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            z-index: 400;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            z-index: 400; justify-content: center; align-items: center; padding: 20px;
         }
 
         .modal-content {
-            background: #161822;
-            padding: 28px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            background: #161822; padding: 28px; border-radius: 24px;
+            width: 100%; max-width: 420px;
+            display: flex; flex-direction: column; gap: 16px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
         input[type="text"], input[type="file"] {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.4);
-            color: #fff;
-            font-size: 0.95rem;
-            outline: none;
+            width: 100%; padding: 12px 16px; border-radius: 12px;
+            border: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.4);
+            color: #fff; font-size: 0.95rem; outline: none;
         }
 
         button { cursor: pointer; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 600; }
-        .btn-primary { background: linear-gradient(135deg, #00ff88, #00c868); color: #000; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-primary { background: linear-gradient(135deg, #00ff88, #00c868); color: #000; }
         .btn-danger { background: var(--danger-color); color: #fff; }
         .btn-secondary { background: rgba(255, 255, 255, 0.06); color: var(--text-color); border: 1px solid var(--border-color); }
 
         #toast-container {
-            position: fixed;
-            top: 20px; left: 50%;
-            transform: translateX(-50%);
-            z-index: 5000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 90%;
-            max-width: 400px;
-            pointer-events: none;
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%); z-index: 5000;
+            display: flex; flex-direction: column; gap: 10px;
+            width: 90%; max-width: 400px; pointer-events: none;
         }
 
         .toast {
             background: rgba(22, 24, 34, 0.95);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 12px 18px;
-            border-radius: 14px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-            text-align: center;
+            border: 1px solid var(--border-color); color: #fff;
+            padding: 12px 18px; border-radius: 14px; font-weight: 600; font-size: 0.9rem;
+            animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; text-align: center;
         }
         .toast.success { border-color: var(--accent-color); }
         .toast.error { border-color: var(--danger-color); }
@@ -475,6 +416,7 @@
 
     <div id="toast-container"></div>
 
+    <!-- USERNAME MODAL -->
     <div id="onboarding-modal" class="modal">
         <div class="modal-content">
             <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
@@ -487,13 +429,9 @@
 
     <header>
         <div class="logo"><span class="logo-icon">∞</span> ymt</div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <span id="current-user-display" style="font-size: 0.8rem; color: #aaa; font-weight: 600;"></span>
-            <button id="admin-btn" class="btn-secondary" style="display:none; padding: 4px 10px; font-size: 0.75rem;" onclick="toggleAdmin()">Admin 🛡️</button>
-        </div>
+        <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
     </header>
 
-    <!-- VIEWS -->
     <!-- 1. FEED VIEW -->
     <main id="feed-view" class="app-view active">
         <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: #666;">Lade Loops...</div>
@@ -502,12 +440,18 @@
     <!-- 2. EXPLORE VIEW -->
     <div id="explore-view" class="app-view">
         <div class="view-header">🧭 Entdecken</div>
-        <div class="grid-container" id="explore-grid">
-            <p style="padding:20px; color:#666; grid-column: span 3;">Lade Medien...</p>
+        <div class="grid-container" id="explore-grid"></div>
+    </div>
+
+    <!-- 3. POSTFACH VIEW (MODERATION ZENTRALE FÜR @ymtmanuel) -->
+    <div id="postfach-view" class="app-view">
+        <div class="view-header">📥 Postfach & Meldungen</div>
+        <div style="padding: 16px;" id="postfach-content">
+            <p style="color:#666;">Lade Nachrichtencenter...</p>
         </div>
     </div>
 
-    <!-- 3. PROFILE VIEW -->
+    <!-- 4. PROFILE VIEW -->
     <div id="profile-view" class="app-view">
         <div class="profile-card">
             <div class="profile-avatar" id="prof-avatar-letter">U</div>
@@ -520,9 +464,7 @@
             </div>
         </div>
         <div style="padding: 10px 20px; font-weight: bold; border-bottom: 1px solid var(--border-color);">Deine Uploads</div>
-        <div class="grid-container" id="profile-grid">
-            <p style="padding:20px; color:#666; grid-column: span 3;">Keine eigenen Uploads.</p>
-        </div>
+        <div class="grid-container" id="profile-grid"></div>
     </div>
 
     <!-- COMMENTS DRAWER -->
@@ -542,7 +484,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Maximal ~800 KB (ohne Storage). Uploads werden vom Admin geprüft.</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Max. ~800 KB. Dein Upload wird gescannt (Dauer bis zu 48 Std.).</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -563,12 +505,9 @@
             <span>Entdecken</span>
         </button>
         
-        <button class="upload-nav-btn" onclick="openModal('upload-modal')">
-            +
-            <div id="peeking-pigeon" class="peeking-pigeon">🕊️</div>
-        </button>
+        <button class="upload-nav-btn" onclick="openModal('upload-modal')">+</button>
 
-        <button class="nav-item" onclick="showToast('Postfach ist leer', 'normal')">
+        <button class="nav-item" onclick="switchTab('postfach-view', this)">
             <span class="nav-icon">📥</span>
             <span>Postfach</span>
         </button>
@@ -578,7 +517,7 @@
         </button>
     </nav>
 
-    <!-- JAVASCRIPT CODE -->
+    <!-- CODE LOGIK -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
@@ -614,6 +553,7 @@
 
             if (viewId === 'explore-view') loadExploreGrid();
             if (viewId === 'profile-view') loadProfileView();
+            if (viewId === 'postfach-view') loadPostfachView();
         }
 
         function initUserSystem() {
@@ -646,7 +586,16 @@
             }
         }
 
-        // FEED LADEN (Ohne Firestore-Index-Sperre!)
+        // TON UMSCHALTEN (FIX FÜR HANDY-AUDIO)
+        function toggleAudio(btn, videoId) {
+            const video = document.getElementById(videoId);
+            if (!video) return;
+            video.muted = !video.muted;
+            btn.innerText = video.muted ? '🔇' : '🔊';
+            showToast(video.muted ? "Ton aus 🔇" : "Ton an 🔊", "normal");
+        }
+
+        // FEED LADEN
         function loadFeed() {
             const feedContainer = document.getElementById("feed-view");
             db.collection("loops")
@@ -654,25 +603,25 @@
               .onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
-                    feedContainer.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#666;">Noch keine Loops da. Poste den ersten!</div>';
+                    feedContainer.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#666;">Keine Loops vorhanden.</div>';
                     return;
                 }
 
-                // In JS sortieren, um Firestore Index-Fehler zu vermeiden
                 let docs = [];
                 snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
                 docs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
-                docs.forEach(data => {
+                docs.forEach((data, index) => {
                     const likesList = data.likesList || [];
                     const hasLiked = likesList.includes(currentUser);
                     const comments = data.comments || [];
                     const isVerified = (data.username === "ymtmanuel");
                     const badge = isVerified ? '<span class="verified-badge">☑️</span>' : '';
                     const isVideo = data.type === "video";
+                    const videoElemId = `feed-video-${data.id}`;
 
                     const mediaElement = isVideo 
-                        ? `<video src="${data.url}" autoplay muted loop playsinline></video>`
+                        ? `<video id="${videoElemId}" src="${data.url}" autoplay muted loop playsinline></video>`
                         : `<img src="${data.url}" class="post-img" alt="Foto" />`;
 
                     const card = document.createElement("div");
@@ -681,6 +630,12 @@
                         <div class="media-container">${mediaElement}</div>
                         
                         <div class="actions-right">
+                            ${isVideo ? `
+                                <button class="action-item" onclick="toggleAudio(this.querySelector('.action-icon-btn'), '${videoElemId}')">
+                                    <div class="action-icon-btn">🔇</div>
+                                    <span>Ton</span>
+                                </button>
+                            ` : ''}
                             <button class="action-item" onclick="toggleLike('${data.id}')">
                                 <div class="action-icon-btn ${hasLiked ? 'liked' : ''}">❤️</div>
                                 <span>${likesList.length}</span>
@@ -688,6 +643,10 @@
                             <button class="action-item" onclick="openComments('${data.id}')">
                                 <div class="action-icon-btn">💬</div>
                                 <span>${comments.length}</span>
+                            </button>
+                            <button class="action-item" onclick="reportContent('post', '${data.id}', '${escapeHtml(data.title)}')">
+                                <div class="action-icon-btn">🚩</div>
+                                <span>Melden</span>
                             </button>
                         </div>
 
@@ -698,8 +657,6 @@
                     `;
                     feedContainer.appendChild(card);
                 });
-            }, err => {
-                showToast("Firestore Fehler beim Laden!", "error");
             });
         }
 
@@ -755,6 +712,135 @@
             });
         }
 
+        // POSTFACH & MODERATION (Speziell angepasst für @ymtmanuel)
+        async function loadPostfachView() {
+            const container = document.getElementById("postfach-content");
+            container.innerHTML = '<p style="color:#666;">Lade Postfach...</p>';
+
+            // WENN BIST DU BIST (@ymtmanuel):
+            if (currentUser === "ymtmanuel") {
+                let html = '<h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>';
+
+                // 1. Ausstehende Posts
+                const pendingSnap = await db.collection("loops").where("status", "==", "pending").get();
+                html += `<h4>Ausstehende Uploads (${pendingSnap.size}):</h4><br>`;
+                
+                if (pendingSnap.empty) {
+                    html += '<p style="color:#666; font-size:0.85rem;">Keine ausstehenden Uploads.</p><br>';
+                } else {
+                    pendingSnap.forEach(doc => {
+                        const d = doc.data();
+                        html += `
+                            <div class="inbox-card">
+                                <div><strong>@${escapeHtml(d.username)}</strong>: ${escapeHtml(d.title)}</div>
+                                <div style="font-size:0.75rem; color:#aaa;">Typ: ${d.type}</div>
+                                <div class="inbox-actions">
+                                    <button class="btn-primary" style="padding:4px 10px; font-size:0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
+                                    <button class="btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2. Gemeldete Inhalte
+                const reportsSnap = await db.collection("reports").get();
+                html += `<h4 style="margin-top:15px;">Gemeldete Inhalte (${reportsSnap.size}):</h4><br>`;
+
+                if (reportsSnap.empty) {
+                    html += '<p style="color:#666; font-size:0.85rem;">Keine Meldungen vorhanden.</p>';
+                } else {
+                    reportsSnap.forEach(doc => {
+                        const r = doc.data();
+                        html += `
+                            <div class="inbox-card" style="border-color:var(--danger-color);">
+                                <div style="color:var(--danger-color); font-weight:bold;">🚩 Meldung (${r.targetType})</div>
+                                <div style="font-size:0.85rem;">Inhalt: "${escapeHtml(r.contentSummary)}"</div>
+                                <div style="font-size:0.75rem; color:#aaa;">Gemeldet von: @${escapeHtml(r.reportedBy)}</div>
+                                <div class="inbox-actions">
+                                    ${r.targetType === 'post' ? `<button class="btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="deletePost('${r.targetId}', '${doc.id}')">Post Löschen 🗑️</button>` : ''}
+                                    <button class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;" onclick="dismissReport('${doc.id}')">Ignorieren 👁️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML = html;
+            } else {
+                // FÜR NORMALE USER:
+                const myPendingSnap = await db.collection("loops")
+                    .where("username", "==", currentUser)
+                    .where("status", "==", "pending")
+                    .get();
+
+                let html = '<h3>Deine Upload-Benachrichtigungen</h3><br>';
+                
+                if (myPendingSnap.empty) {
+                    html += '<p style="color:#aaa; font-size:0.9rem;">Keine aktiven Überprüfungen. Alle deine Posts sind freigeschaltet!</p>';
+                } else {
+                    myPendingSnap.forEach(doc => {
+                        const d = doc.data();
+                        html += `
+                            <div class="inbox-card" style="border-color:var(--verified-color);">
+                                <div style="font-weight:bold;">⏳ In Prüfung: "${escapeHtml(d.title)}"</div>
+                                <p style="font-size:0.8rem; color:#ccc; margin-top:4px;">
+                                    Bitte warten. Dein Beitrag wird gerade gescannt & geprüft.<br>
+                                    <strong>Bearbeitungszeit: ca. 48 Stunden.</strong>
+                                </p>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML = html;
+            }
+        }
+
+        // ADMIN AKTIONEN
+        async function approvePost(docId) {
+            await db.collection("loops").doc(docId).update({ status: "approved" });
+            showToast("Post freigegeben! ✅", "success");
+            loadPostfachView();
+        }
+
+        async function rejectPost(docId) {
+            await db.collection("loops").doc(docId).delete();
+            showToast("Post abgelehnt & gelöscht ❌", "normal");
+            loadPostfachView();
+        }
+
+        async function deletePost(postId, reportId) {
+            await db.collection("loops").doc(postId).delete();
+            await db.collection("reports").doc(reportId).delete();
+            showToast("Post endgültig gelöscht! 🗑️", "success");
+            loadPostfachView();
+        }
+
+        async function dismissReport(reportId) {
+            await db.collection("reports").doc(reportId).delete();
+            showToast("Meldung verworfen 👁️", "normal");
+            loadPostfachView();
+        }
+
+        // MELDEN-FUNKTION
+        async function reportContent(targetType, targetId, contentSummary) {
+            if (!currentUser) return showToast("Bitte erst anmelden!", "error");
+            
+            try {
+                await db.collection("reports").add({
+                    targetType: targetType,
+                    targetId: targetId,
+                    contentSummary: contentSummary,
+                    reportedBy: currentUser,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Inhalt gemeldet! Danke 🚩", "success");
+            } catch(e) {
+                showToast("Fehler beim Melden!", "error");
+            }
+        }
+
         async function toggleLike(docId) {
             if (!currentUser) return showToast("Bitte erst anmelden!", "error");
             const docRef = db.collection("loops").doc(docId);
@@ -763,20 +849,15 @@
 
             const likesList = doc.data().likesList || [];
             if (likesList.includes(currentUser)) {
-                await docRef.update({
-                    likesList: firebase.firestore.FieldValue.arrayRemove(currentUser)
-                });
+                await docRef.update({ likesList: firebase.firestore.FieldValue.arrayRemove(currentUser) });
             } else {
-                await docRef.update({
-                    likesList: firebase.firestore.FieldValue.arrayUnion(currentUser)
-                });
+                await docRef.update({ likesList: firebase.firestore.FieldValue.arrayUnion(currentUser) });
             }
         }
 
         async function openComments(docId) {
             activeCommentDocId = docId;
-            const drawer = document.getElementById("comments-drawer");
-            drawer.classList.add("open");
+            document.getElementById("comments-drawer").classList.add("open");
             loadCommentsIntoDrawer(docId);
         }
 
@@ -798,9 +879,12 @@
                 return;
             }
 
-            listContainer.innerHTML = comments.map(c => 
-                `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
-            ).join('');
+            listContainer.innerHTML = comments.map(c => `
+                <div class="comment-item">
+                    <div><strong style="color:var(--accent-color);">@${escapeHtml(c.user)}:</strong> ${escapeHtml(c.text)}</div>
+                    <button class="report-flag-btn" title="Kommentar melden" onclick="reportContent('comment', '${docId}', '${escapeHtml(c.user)}: ${escapeHtml(c.text)}')">🚩</button>
+                </div>
+            `).join('');
         }
 
         async function addCommentFromDrawer() {
@@ -809,11 +893,7 @@
             const text = input.value.trim();
             if (!text) return;
 
-            const newComment = {
-                user: currentUser || "Anonym",
-                text: text,
-                time: Date.now()
-            };
+            const newComment = { user: currentUser || "Anonym", text: text, time: Date.now() };
 
             await db.collection("loops").doc(activeCommentDocId).update({
                 comments: firebase.firestore.FieldValue.arrayUnion(newComment)
@@ -824,7 +904,7 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // UPLOAD MEDIA (Mit direkter Fehleranzeige)
+        // UPLOAD MEDIA
         function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -842,26 +922,23 @@
                 return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            // GRENZE: 800 KB wegen Base64 & 1MB Firestore Limit
             const MAX_SIZE = 800 * 1024;
             if (file.size > MAX_SIZE) {
-                return showToast("Datei zu groß! Max. 0.8 MB (Ohne Storage).", "error");
+                return showToast("Datei zu groß! Max. 0.8 MB.", "error");
             }
 
-            showToast("Wandle Datei um... ⏳", "normal");
+            showToast("Verarbeite Datei... ⏳", "normal");
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const base64Url = e.target.result;
-                const type = isVideo ? "video" : "image";
-                saveToFirestore(rawTitle, base64Url, type);
+                saveToFirestore(rawTitle, e.target.result, isVideo ? "video" : "image");
             };
-            
             reader.readAsDataURL(file);
         }
 
         async function saveToFirestore(title, url, type) {
             try {
+                // Auto-Approval für @ymtmanuel, sonst pending
                 const initialStatus = (currentUser === "ymtmanuel") ? "approved" : "pending";
 
                 await db.collection("loops").add({
@@ -876,17 +953,16 @@
                 });
 
                 if (initialStatus === "approved") {
-                    showToast("Direkt veröffentlicht! 🚀", "success");
+                    showToast("Direkt veröffentlich! 🚀", "success");
                 } else {
-                    showToast("Eingereicht! Wartet auf Freigabe ⏳", "success");
+                    showToast("Eingereicht! Wird gescannt ⏳", "success");
                 }
 
                 closeModal('upload-modal');
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                console.error("Firestore Upload Error:", err);
-                showToast("Fehler beim Speichern in Firestore!", "error");
+                showToast("Fehler beim Speichern!", "error");
             }
         }
 
