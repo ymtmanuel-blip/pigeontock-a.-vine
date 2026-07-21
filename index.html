@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ymt Loops & Posts</title>
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,13 +13,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <!-- Firebase Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <!-- Firebase Storage SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 
     <style>
         :root {
             --bg-color: #0b0c10;
-            --card-bg: rgba(22, 24, 34, 0.7);
+            --card-bg: rgba(22, 24, 34, 0.85);
             --accent-color: #00ff88;
             --accent-glow: rgba(0, 255, 136, 0.3);
             --danger-color: #ff3366;
@@ -33,21 +31,34 @@
             margin: 0;
             padding: 0;
             font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        html, body {
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 50% 0%, #1a1c2e 0%, #0b0c10 70%);
             color: var(--text-color);
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            width: 100%;
+            max-width: 500px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            min-height: 100vh;
-            padding-bottom: 40px;
+            background: linear-gradient(to bottom, rgba(11,12,16,0.9), transparent);
+            z-index: 100;
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 900;
             background: linear-gradient(45deg, #00ff88, #00d2ff);
             -webkit-background-clip: text;
@@ -55,179 +66,179 @@
             letter-spacing: -1px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            text-shadow: 0 0 20px var(--accent-glow);
+            gap: 6px;
         }
 
         .logo-icon {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             background: linear-gradient(135deg, #00ff88, #00d2ff);
-            border-radius: 8px;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: #000;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 900;
             -webkit-text-fill-color: initial;
-        }
-
-        header {
-            width: 100%;
-            max-width: 500px;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(11, 12, 16, 0.8);
-            backdrop-filter: blur(16px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        button {
-            cursor: pointer;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-
-        button:active {
-            transform: scale(0.96);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #00ff88, #00c868);
-            color: #000;
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
-
-        .btn-danger {
-            background: var(--danger-color);
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
         }
 
         main {
             width: 100%;
             max-width: 500px;
-            padding: 20px;
+            height: 100vh;
+            margin: 0 auto;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            padding-bottom: 70px;
         }
 
         .loop-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
         .media-container {
-            width: 100%;
-            background: #000;
-            position: relative;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0b0c10;
+            z-index: 1;
         }
 
         video, img.post-img {
             width: 100%;
-            max-height: 500px;
-            display: block;
-            object-fit: contain;
+            height: 100%;
+            object-fit: cover;
         }
 
         .loop-info {
-            padding: 16px;
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-        }
-
-        .loop-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            gap: 8px;
+            padding-bottom: 90px;
         }
 
         .loop-author {
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 700;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #aaa;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
         .verified-badge {
             color: var(--verified-color);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .loop-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #fff;
+            font-size: 0.95rem;
+            color: #f0f2f5;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            line-height: 1.3;
         }
 
-        .actions {
+        .actions-right {
+            position: absolute;
+            right: 16px;
+            bottom: 100px;
+            z-index: 5;
             display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .like-btn {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 6px 14px;
-        }
-
-        .like-btn.liked {
-            background: rgba(255, 51, 102, 0.2);
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-
-        .comments-section {
-            border-top: 1px solid var(--border-color);
-            padding-top: 10px;
-            margin-top: 6px;
-            display: none;
             flex-direction: column;
-            gap: 8px;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+        }
+
+        .action-icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.1s;
+        }
+        .action-icon-btn:active { transform: scale(0.9); }
+        .action-icon-btn.liked { background: rgba(255, 51, 102, 0.3); border-color: var(--danger-color); color: var(--danger-color); }
+
+        .comments-drawer {
+            position: fixed;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 100%;
+            max-width: 500px;
+            height: 55vh;
+            background: #161822;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            z-index: 300;
+            transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+        }
+        .comments-drawer.open { transform: translateX(-50%) translateY(0); }
+
+        .comments-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
         }
 
         .comment-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 180px;
-            overflow-y: auto;
+            gap: 10px;
         }
 
         .comment-item {
             font-size: 0.85rem;
             background: rgba(0,0,0,0.25);
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
             word-break: break-word;
         }
 
@@ -237,16 +248,91 @@
             margin-right: 6px;
         }
 
-        .comment-input-box {
+        .comment-input-area {
+            padding: 12px 16px;
+            background: #0b0c10;
             display: flex;
-            gap: 6px;
-            margin-top: 4px;
+            gap: 8px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .comment-input-box input {
+        .comment-input-area input {
             flex: 1;
-            padding: 8px 12px;
-            font-size: 0.85rem;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        nav.tiktok-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            height: 65px;
+            background: rgba(11, 12, 16, 0.92);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 200;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #777;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-item.active, .nav-item:hover { color: #fff; }
+        .nav-icon { font-size: 1.3rem; }
+
+        .upload-nav-btn {
+            position: relative;
+            width: 48px;
+            height: 32px;
+            background: linear-gradient(135deg, #00ff88, #00d2ff);
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 900;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--accent-glow);
+            overflow: visible;
+        }
+
+        .peeking-pigeon {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%) translateY(25px);
+            font-size: 1.2rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        .peeking-pigeon.peek {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
         .modal {
@@ -255,7 +341,7 @@
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85);
             backdrop-filter: blur(8px);
-            z-index: 200;
+            z-index: 400;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -285,6 +371,11 @@
             outline: none;
         }
 
+        button { cursor: pointer; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 600; }
+        .btn-primary { background: linear-gradient(135deg, #00ff88, #00c868); color: #000; box-shadow: 0 4px 15px var(--accent-glow); }
+        .btn-danger { background: var(--danger-color); color: #fff; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.06); color: var(--text-color); border: 1px solid var(--border-color); }
+
         #ban-overlay {
             display: none;
             position: fixed;
@@ -310,10 +401,10 @@
 
         #toast-container {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            z-index: 5000;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -331,13 +422,13 @@
             font-weight: 600;
             font-size: 0.9rem;
             animation: fadeIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            text-align: center;
         }
-
         .toast.success { border-color: var(--accent-color); }
         .toast.error { border-color: var(--danger-color); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
     </style>
 </head>
 <body>
@@ -360,33 +451,41 @@
     </div>
 
     <header>
-        <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
+        <div class="logo"><span class="logo-icon">∞</span> ymt</div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
-            <button class="btn-primary" onclick="openModal('upload-modal')">+ Posten</button>
-            <button id="admin-btn" class="btn-secondary" style="display:none;" onclick="toggleAdmin()">Admin 🛡️</button>
+            <span id="current-user-display" style="font-size: 0.8rem; color: #aaa; font-weight: 600;"></span>
+            <button id="admin-btn" class="btn-secondary" style="display:none; padding: 4px 10px; font-size: 0.75rem;" onclick="toggleAdmin()">Admin 🛡️</button>
         </div>
     </header>
 
-    <main>
-        <!-- ADMIN MODERATIONSPANEL -->
-        <div id="admin-panel" class="admin-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="color: var(--accent-color); font-weight:bold;">🛡️ Admin-Freigabe (Pending Posts)</span>
-                <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
-            </div>
-            <div id="pending-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    <div id="admin-panel" class="admin-panel" style="position: absolute; top: 60px; left: 10px; right: 10px; z-index: 250;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="color: var(--accent-color); font-weight:bold;">🛡️ Admin-Freigabe (Pending)</span>
+            <button class="btn-secondary" style="padding: 4px 10px;" onclick="toggleAdmin()">Schließen</button>
         </div>
+        <div id="pending-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;"></div>
+    </div>
 
-        <div id="feed">
-            <p style="text-align: center; color: #666; margin-top: 40px;">Lade Posts...</p>
-        </div>
+    <main id="feed">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: #666;">Lade Loops...</div>
     </main>
+
+    <div id="comments-drawer" class="comments-drawer">
+        <div class="comments-header">
+            <span>Kommentare</span>
+            <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="closeComments()">✕</button>
+        </div>
+        <div class="comment-list" id="drawer-comment-list"></div>
+        <div class="comment-input-area">
+            <input type="text" id="drawer-cmt-input" placeholder="Schreibe einen Kommentar...">
+            <button class="btn-primary" style="padding: 6px 14px;" onclick="addCommentFromDrawer()">Senden</button>
+        </div>
+    </div>
 
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Maximal 5 MB. Uploads werden vor Veröffentlichung vom Admin geprüft.</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Maximal 800 KB (ohne Storage). Uploads werden vom Admin geprüft.</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -396,6 +495,32 @@
         </div>
     </div>
 
+    <nav class="tiktok-nav">
+        <button class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" onclick="showToast('Entdecken kommt bald!', 'normal')">
+            <span class="nav-icon">🧭</span>
+            <span>Entdecken</span>
+        </button>
+        
+        <button class="upload-nav-btn" onclick="openModal('upload-modal')">
+            +
+            <div id="peeking-pigeon" class="peeking-pigeon">🕊️</div>
+        </button>
+
+        <button class="nav-item" onclick="showToast('Postfach ist leer', 'normal')">
+            <span class="nav-icon">📥</span>
+            <span>Postfach</span>
+        </button>
+        <button class="nav-item" onclick="showToast('Profil aktiv', 'normal')">
+            <span class="nav-icon">👤</span>
+            <span>Profil</span>
+        </button>
+    </nav>
+
+    <!-- HIER BEGINNT DER JAVASCRIPT BEREICH -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
@@ -409,9 +534,9 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
 
         let currentUser = localStorage.getItem("ymt_username") || "";
+        let activeCommentDocId = null;
 
         function showToast(message, type = "normal") {
             const container = document.getElementById("toast-container");
@@ -421,6 +546,19 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
+
+        function startPigeonPeeking() {
+            const pigeon = document.getElementById("peeking-pigeon");
+            if (!pigeon) return;
+
+            setInterval(() => {
+                pigeon.classList.add("peek");
+                setTimeout(() => {
+                    pigeon.classList.remove("peek");
+                }, 1200);
+            }, 5000);
+        }
+        startPigeonPeeking();
 
         function checkBanStatus() {
             if (localStorage.getItem("ymt_banned") === "true") {
@@ -456,7 +594,6 @@
             showToast(`Willkommen, @${currentUser}! 🎉`, "success");
         }
 
-        // FEEDS LADEN (NUR 'approved' POSTS ZEIGEN)
         function loadFeed() {
             const feedContainer = document.getElementById("feed");
             db.collection("loops")
@@ -465,7 +602,7 @@
               .onSnapshot(snapshot => {
                 feedContainer.innerHTML = "";
                 if (snapshot.empty) {
-                    feedContainer.innerHTML = '<p style="text-align: center; color: #666; margin-top: 40px;">Noch keine Posts da.</p>';
+                    feedContainer.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#666;">Noch keine Loops da. Poste den ersten!</div>';
                     return;
                 }
 
@@ -478,38 +615,29 @@
                     const badge = isVerified ? '<span class="verified-badge">☑️</span>' : '';
                     const isVideo = data.type === "video";
 
-                    const commentsHtml = comments.map(c => 
-                        `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
-                    ).join('');
-
                     const mediaElement = isVideo 
-                        ? `<video src="${data.url}" controls loop playsinline></video>`
+                        ? `<video src="${data.url}" autoplay muted loop playsinline></video>`
                         : `<img src="${data.url}" class="post-img" alt="Foto" />`;
 
                     const card = document.createElement("div");
                     card.className = "loop-card";
                     card.innerHTML = `
                         <div class="media-container">${mediaElement}</div>
+                        
+                        <div class="actions-right">
+                            <button class="action-item" onclick="toggleLike('${doc.id}')">
+                                <div class="action-icon-btn ${hasLiked ? 'liked' : ''}">❤️</div>
+                                <span>${likesList.length}</span>
+                            </button>
+                            <button class="action-item" onclick="openComments('${doc.id}')">
+                                <div class="action-icon-btn">💬</div>
+                                <span>${comments.length}</span>
+                            </button>
+                        </div>
+
                         <div class="loop-info">
-                            <div class="loop-header">
-                                <span class="loop-author">@${escapeHtml(data.username || 'Anonym')} ${badge}</span>
-                            </div>
+                            <div class="loop-author">@${escapeHtml(data.username || 'Anonym')} ${badge}</div>
                             <div class="loop-title">${escapeHtml(data.title)}</div>
-                            <div class="actions">
-                                <button class="like-btn ${hasLiked ? 'liked' : ''}" onclick="toggleLike('${doc.id}')">
-                                    ❤️ <span>${likesList.length}</span>
-                                </button>
-                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="toggleComments('${doc.id}')">
-                                    💬 ${comments.length}
-                                </button>
-                            </div>
-                            <div class="comments-section" id="comments-${doc.id}">
-                                <div class="comment-list">${commentsHtml.length ? commentsHtml : '<p style="font-size:0.8rem; color:#666;">Keine Kommentare</p>'}</div>
-                                <div class="comment-input-box">
-                                    <input type="text" id="cmt-input-${doc.id}" placeholder="Kommentar schreiben...">
-                                    <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="addComment('${doc.id}')">Send</button>
-                                </div>
-                            </div>
                         </div>
                     `;
                     feedContainer.appendChild(card);
@@ -535,13 +663,39 @@
             }
         }
 
-        function toggleComments(docId) {
-            const box = document.getElementById(`comments-${docId}`);
-            box.style.display = (box.style.display === "flex") ? "none" : "flex";
+        async function openComments(docId) {
+            activeCommentDocId = docId;
+            const drawer = document.getElementById("comments-drawer");
+            drawer.classList.add("open");
+            loadCommentsIntoDrawer(docId);
         }
 
-        async function addComment(docId) {
-            const input = document.getElementById(`cmt-input-${docId}`);
+        function closeComments() {
+            document.getElementById("comments-drawer").classList.remove("open");
+            activeCommentDocId = null;
+        }
+
+        async function loadCommentsIntoDrawer(docId) {
+            const listContainer = document.getElementById("drawer-comment-list");
+            listContainer.innerHTML = '<p style="color:#666; text-align:center;">Lade Kommentare...</p>';
+            
+            const doc = await db.collection("loops").doc(docId).get();
+            if (!doc.exists) return;
+
+            const comments = doc.data().comments || [];
+            if (comments.length === 0) {
+                listContainer.innerHTML = '<p style="color:#666; text-align:center; margin-top:20px;">Noch keine Kommentare. Schreib den ersten!</p>';
+                return;
+            }
+
+            listContainer.innerHTML = comments.map(c => 
+                `<div class="comment-item"><span class="comment-user">@${escapeHtml(c.user)}:</span>${escapeHtml(c.text)}</div>`
+            ).join('');
+        }
+
+        async function addCommentFromDrawer() {
+            if (!activeCommentDocId) return;
+            const input = document.getElementById("drawer-cmt-input");
             const text = input.value.trim();
             if (!text) return;
 
@@ -551,16 +705,17 @@
                 time: Date.now()
             };
 
-            await db.collection("loops").doc(docId).update({
+            await db.collection("loops").doc(activeCommentDocId).update({
                 comments: firebase.firestore.FieldValue.arrayUnion(newComment)
             });
 
             input.value = "";
-            showToast("Gepostet! 💬", "success");
+            loadCommentsIntoDrawer(activeCommentDocId);
+            showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // DATEI MIT 5 MB LIMIT HOCHLADEN
-        async function uploadMedia() {
+        // NEUE UPLOAD-FUNKTION OHNE STORAGE (Speichert direkt als Base64 in Firestore)
+        function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
             const rawTitle = titleInput.value.trim();
@@ -574,34 +729,27 @@
             const isImage = file.type.startsWith('image/');
 
             if (!isVideo && !isImage) {
-                return showToast("Bitte nur Bilder oder Videos hochladen!", "error");
+                return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            // Maximale Dateigröße: 5 MB (5 * 1024 * 1024 Bytes)
-            const MAX_SIZE = 5 * 1024 * 1024;
+            // FIRESTORE HARD-LIMIT: Max ~800 KB, damit das Dokument unter 1 MB bleibt!
+            const MAX_SIZE = 800 * 1024;
             if (file.size > MAX_SIZE) {
-                return showToast("Datei ist zu groß! Maximal 5 MB erlaubt.", "error");
+                return showToast("Datei zu groß! Ohne Storage max. 800 KB.", "error");
             }
 
-            showToast("Lade Datei hoch... ⏳", "normal");
+            showToast("Wandle Datei um... ⏳", "normal");
 
-            try {
-                const fileName = 'uploads/' + Date.now() + '_' + file.name;
-                const storageRef = storage.ref(fileName);
-                
-                const snapshot = await storageRef.put(file);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Url = e.target.result;
                 const type = isVideo ? "video" : "image";
-                await saveToFirestore(rawTitle, downloadURL, type);
-
-            } catch (err) {
-                console.error(err);
-                showToast("Fehler beim Hochladen der Datei!", "error");
-            }
+                saveToFirestore(rawTitle, base64Url, type);
+            };
+            
+            reader.readAsDataURL(file);
         }
 
-        // POST ALS 'pending' SPEICHERN
         async function saveToFirestore(title, url, type) {
             try {
                 const initialStatus = (currentUser === "ymtmanuel") ? "approved" : "pending";
@@ -618,16 +766,17 @@
                 });
 
                 if (initialStatus === "approved") {
-                    showToast("Dein Post wurde direkt veröffentlicht! 🚀", "success");
+                    showToast("Direkt veröffentlicht! 🚀", "success");
                 } else {
-                    showToast("Post eingereicht! Wartet auf Admin-Freigabe ⏳", "success");
+                    showToast("Eingereicht! Wartet auf Admin-Freigabe ⏳", "success");
                 }
 
                 closeModal('upload-modal');
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                showToast("Fehler beim Speichern in der Datenbank!", "error");
+                console.error(err);
+                showToast("Fehler beim Speichern in Firestore!", "error");
             }
         }
 
@@ -637,7 +786,6 @@
             if (panel.style.display === "block") loadPendingPosts();
         }
 
-        // LÄDT ALLE UPLOADS, DIE AUF DIE FREIGABE WARTEN
         function loadPendingPosts() {
             const list = document.getElementById("pending-list");
             db.collection("loops").where("status", "==", "pending").onSnapshot(snapshot => {
@@ -646,17 +794,17 @@
                     const data = doc.data();
                     const isVideo = data.type === "video";
                     const mediaPreview = isVideo 
-                        ? `<video src="${data.url}" controls style="max-height: 150px; border-radius: 8px;"></video>`
-                        : `<img src="${data.url}" style="max-height: 150px; border-radius: 8px; object-fit: contain;" />`;
+                        ? `<video src="${data.url}" controls style="max-height: 120px; border-radius: 8px;"></video>`
+                        : `<img src="${data.url}" style="max-height: 120px; border-radius: 8px; object-fit: contain;" />`;
 
                     const item = document.createElement("div");
-                    item.style.cssText = "background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;";
+                    item.style.cssText = "background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;";
                     item.innerHTML = `
-                        <div><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</div>
+                        <div style="font-size:0.85rem;"><strong>@${escapeHtml(data.username)}</strong>: ${escapeHtml(data.title)}</div>
                         <div>${mediaPreview}</div>
-                        <div style="display:flex; gap:8px; margin-top: 4px;">
-                            <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
-                            <button class="btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
+                            <button class="btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -664,15 +812,14 @@
             });
         }
 
-        // ADMIN-AKTIONEN
         async function approvePost(docId) {
             await db.collection("loops").doc(docId).update({ status: "approved" });
-            showToast("Beitrag freigegeben! 🎉", "success");
+            showToast("Freigegeben! 🎉", "success");
         }
 
         async function rejectPost(docId) {
             await db.collection("loops").doc(docId).delete();
-            showToast("Beitrag abgelehnt und gelöscht.", "normal");
+            showToast("Beitrag abgelehnt.", "normal");
         }
 
         function openModal(id) { document.getElementById(id).style.display = "flex"; }
