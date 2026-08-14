@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
-    <!-- Bild-Komprimierungs-Bibliothek (Client-side API) -->
+    <!-- Bild-Komprimierungs-Bibliothek -->
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
 
     <style>
@@ -300,28 +300,32 @@
         }
 
         .report-flag-btn {
-            background: none;
-            border: none;
-            color: #777;
-            font-size: 0.85rem;
-            cursor: pointer;
-            padding: 2px 6px;
+            background: none; border: none; color: #777; font-size: 0.85rem; cursor: pointer; padding: 2px 6px;
         }
         .report-flag-btn:hover { color: var(--danger-color); }
 
         .comment-input-area {
-            padding: 12px 16px;
-            background: #0b0c10;
-            display: flex; gap: 8px;
-            border-top: 1px solid var(--border-color);
+            padding: 12px 16px; background: #0b0c10; display: flex; gap: 8px; border-top: 1px solid var(--border-color);
         }
 
         .comment-input-area input {
-            flex: 1; padding: 10px 14px;
-            border-radius: 20px;
+            flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem;
+        }
+
+        /* Admin Storage Meter */
+        .storage-meter-card {
+            background: rgba(0,0,0,0.4);
             border: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.05);
-            color: #fff; outline: none; font-size: 0.9rem;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+        .storage-bar-bg {
+            width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-top: 8px;
+        }
+        .storage-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #00ff88, #00d2ff); width: 0%; transition: width 0.5s ease;
         }
 
         /* Postfach Styling */
@@ -331,9 +335,7 @@
             border-radius: 14px;
             padding: 14px;
             margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            display: flex; flex-direction: column; gap: 8px;
         }
 
         .inbox-actions { display: flex; gap: 8px; margin-top: 6px; }
@@ -353,8 +355,7 @@
         }
 
         .nav-item {
-            background: none; border: none;
-            color: #777; font-size: 0.75rem; font-weight: 600;
+            background: none; border: none; color: #777; font-size: 0.75rem; font-weight: 600;
             display: flex; flex-direction: column; align-items: center; gap: 3px;
             cursor: pointer; transition: color 0.2s; flex: 1;
         }
@@ -448,7 +449,7 @@
 
     <!-- 3. POSTFACH VIEW -->
     <div id="postfach-view" class="app-view">
-        <div class="view-header">📥 Postfach & Meldungen</div>
+        <div class="view-header">📥 Postfach & Admin</div>
         <div style="padding: 16px;" id="postfach-content">
             <p style="color:#666;">Lade Nachrichtencenter...</p>
         </div>
@@ -487,7 +488,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Dateien werden automatisch optimiert & komprimiert.</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Videos werden automatisch komprimiert (&lt; 700 KB).</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -520,7 +521,6 @@
         </button>
     </nav>
 
-    <!-- CODE LOGIK -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBCFpS0xDeHl9EteigBUQq6nI2MCgyyoa8",
@@ -597,7 +597,6 @@
             showToast(video.muted ? "Ton aus 🔇" : "Ton an 🔊", "normal");
         }
 
-        // FEED LADEN & SCROLL OBSERVER
         function loadFeed() {
             const feedContainer = document.getElementById("feed-view");
             db.collection("loops")
@@ -686,7 +685,7 @@
             });
         }
 
-        // DOWNLOAD MIT WASSERZEICHEN IN DER MITTE (FOTOS & VIDEOS)
+        // WASSERZEICHEN ZENTRIERT (FOTOS & VIDEOS)
         async function downloadWithWatermark(url, type, authorName) {
             showToast("Bereite Download mit Wasserzeichen vor...", "normal");
 
@@ -699,24 +698,18 @@
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
 
-                    // Bild zeichnen
                     ctx.drawImage(img, 0, 0);
 
-                    // Wasserzeichen in der Mitte (Halbtransparent & Dezent)
                     const fontSize = Math.max(22, Math.floor(canvas.width * 0.05));
                     ctx.font = `800 ${fontSize}px Outfit, sans-serif`;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
 
-                    // Schlagschatten für Lesbarkeit
                     ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
                     ctx.shadowBlur = 12;
-
-                    // Dezent helles, leicht transparentes Weiß
                     ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
                     ctx.fillText(`YMT Loops • @${authorName}`, canvas.width / 2, canvas.height / 2);
 
-                    // Herunterladen
                     const a = document.createElement('a');
                     a.download = `ymt_loop_@${authorName}_${Date.now()}.jpg`;
                     a.href = canvas.toDataURL('image/jpeg', 0.9);
@@ -725,7 +718,6 @@
                 };
                 img.src = url;
             } else {
-                // VIDEO WASSERZEICHEN RENDERN PER CANVAS & MEDIARECORDER
                 showToast("Rendere Video mit Wasserzeichen... ⏳", "normal");
 
                 const tempVid = document.createElement('video');
@@ -743,11 +735,8 @@
 
                     const stream = canvas.captureStream(30);
                     let recorder;
-                    try {
-                        recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-                    } catch(e) {
-                        recorder = new MediaRecorder(stream);
-                    }
+                    try { recorder = new MediaRecorder(stream, { mimeType: 'video/webm' }); } 
+                    catch(e) { recorder = new MediaRecorder(stream); }
 
                     const chunks = [];
                     recorder.ondataavailable = e => chunks.push(e.data);
@@ -770,7 +759,6 @@
                         }
                         ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
 
-                        // Wasserzeichen genau in der Mitte
                         const fontSize = Math.max(22, Math.floor(canvas.width * 0.05));
                         ctx.font = `800 ${fontSize}px Outfit, sans-serif`;
                         ctx.textAlign = "center";
@@ -839,12 +827,36 @@
             });
         }
 
+        // ADMIN-PANEL + SPEICHER-ANZEIGE
         async function loadPostfachView() {
             const container = document.getElementById("postfach-content");
             container.innerHTML = '<p style="color:#666;">Lade Postfach...</p>';
 
             if (currentUser === "ymtmanuel") {
-                let html = '<h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>';
+                // Berechne Speicherverbrauch aller Posts
+                const allLoopsSnap = await db.collection("loops").get();
+                let totalBytes = 0;
+                allLoopsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.url) totalBytes += data.url.length; // Approximate Base64 size
+                });
+
+                const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
+                const limitMB = 1000; // 1 GB kostenloses Firebase Kontingent
+                const percent = Math.min(100, ((usedMB / limitMB) * 100)).toFixed(1);
+
+                let html = `
+                    <div class="storage-meter-card">
+                        <div style="display:flex; justify-space-between; font-weight:bold; font-size:0.85rem;">
+                            <span>📊 Firebase Speicherbelegung:</span>
+                            <span style="color:var(--accent-color);">${usedMB} MB / ${limitMB} MB (${percent}%)</span>
+                        </div>
+                        <div class="storage-bar-bg">
+                            <div class="storage-bar-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                    <h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>
+                `;
 
                 const pendingSnap = await db.collection("loops").where("status", "==", "pending").get();
                 html += `<h4>Ausstehende Uploads (${pendingSnap.size}):</h4><br>`;
@@ -907,7 +919,7 @@
                             <div class="inbox-card" style="border-color:var(--verified-color);">
                                 <div style="font-weight:bold;">⏳ In Prüfung: "${escapeHtml(d.title)}"</div>
                                 <p style="font-size:0.8rem; color:#ccc; margin-top:4px;">
-                                    Bitte warten. Dein Beitrag wird gerade gescannt & geprüft.<br>
+                                    Bitte warten. Dein Beitrag wird gescannt & geprüft.<br>
                                     <strong>Bearbeitungszeit: ca. 48 Stunden.</strong>
                                 </p>
                             </div>
@@ -1024,7 +1036,57 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // UPLOAD MEDIA MIT KOMPRIMIERUNGS-LIB / API
+        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG & UPLOAD
+        async function compressVideoFile(file) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.muted = true;
+                
+                video.onloadeddata = async () => {
+                    await video.play();
+                    const canvas = document.createElement('canvas');
+                    
+                    // Skaliere Auflösung für max. Komprimierung (max. 480p Höhe)
+                    const scale = Math.min(1, 480 / video.videoHeight);
+                    canvas.width = (video.videoWidth * scale) || 480;
+                    canvas.height = (video.videoHeight * scale) || 640;
+
+                    const ctx = canvas.getContext('2d');
+                    const stream = canvas.captureStream(24);
+
+                    let recorder;
+                    const options = { videoBitsPerSecond: 400000 }; // Low Bitrate (400 kbps)
+                    try {
+                        recorder = new MediaRecorder(stream, { ...options, mimeType: 'video/webm' });
+                    } catch(e) {
+                        recorder = new MediaRecorder(stream);
+                    }
+
+                    const chunks = [];
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    
+                    recorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        resolve(blob);
+                    };
+
+                    recorder.start();
+
+                    function processFrame() {
+                        if (video.paused || video.ended) {
+                            recorder.stop();
+                            return;
+                        }
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        requestAnimationFrame(processFrame);
+                    }
+
+                    processFrame();
+                };
+            });
+        }
+
         async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -1042,16 +1104,11 @@
                 return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            showToast("Komprimiere & Verarbeite Datei... ⏳", "normal");
+            showToast("Komprimiere & verarbeite Upload... ⏳", "normal");
 
             if (isImage) {
                 try {
-                    // Erweiterte Komprimierung via 'browser-image-compression' API/Library
-                    const options = {
-                        maxSizeMB: 0.5,             // Max. 500 KB Zielgröße
-                        maxWidthOrHeight: 1080,     // Max. HD Auflösung
-                        useWebWorker: true          // Verhindert Lags beim Rendern
-                    };
+                    const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1080, useWebWorker: true };
                     const compressedFile = await imageCompression(file, options);
                     
                     const reader = new FileReader();
@@ -1061,8 +1118,6 @@
                     reader.readAsDataURL(compressedFile);
 
                 } catch (error) {
-                    showToast("Fehler bei Komprimierung, wende Fallback an...", "error");
-                    // Fallback falls die Library fehlschlägt
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         saveToFirestore(rawTitle, e.target.result, "image");
@@ -1070,12 +1125,22 @@
                     reader.readAsDataURL(file);
                 }
             } else {
-                // Video verarbeiten
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    saveToFirestore(rawTitle, e.target.result, "video");
-                };
-                reader.readAsDataURL(file);
+                try {
+                    // Video Komprimieren
+                    const compressedBlob = await compressVideoFile(file);
+                    
+                    if (compressedBlob.size > 720 * 1024) { // Prüfen ob > 720 KB
+                        showToast("Video ist trotz Komprimierung etwas zu lang!", "error");
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        saveToFirestore(rawTitle, e.target.result, "video");
+                    };
+                    reader.readAsDataURL(compressedBlob);
+                } catch(e) {
+                    showToast("Fehler bei Video-Komprimierung!", "error");
+                }
             }
         }
 
@@ -1095,7 +1160,7 @@
                 });
 
                 if (initialStatus === "approved") {
-                    showToast("Direkt veröffentlicht! 🚀", "success");
+                    showToast("Direkt veröffenlicht! 🚀", "success");
                 } else {
                     showToast("Eingereicht! Wird gescannt ⏳", "success");
                 }
@@ -1104,7 +1169,7 @@
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                showToast("Fehler beim Speichern (Datei evtl. zu groß)!", "error");
+                showToast("Fehler: Video/Foto leider zu groß für Firebase!", "error");
             }
         }
 
