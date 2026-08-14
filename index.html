@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ymt Loops & Posts</title>
+    <title>YMT Loops & Posts</title>
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,27 +57,27 @@
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 900;
             background: linear-gradient(45deg, #00ff88, #00d2ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .logo-icon {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             background: linear-gradient(135deg, #00ff88, #00d2ff);
             border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: #000;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 900;
             -webkit-text-fill-color: initial;
         }
@@ -112,7 +112,6 @@
             justify-content: flex-end;
         }
 
-        /* PERFEKTE ANPASSUNG FÜR QUERFORMAT & HOCHFORMAT */
         .media-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -126,7 +125,7 @@
         video, img.post-img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Kein Abschneiden bei Querformat! */
+            object-fit: contain;
             background: #000;
         }
 
@@ -134,6 +133,7 @@
             position: relative;
             z-index: 2;
             padding: 20px;
+            padding-right: 80px; 
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
             display: flex;
             flex-direction: column;
@@ -152,7 +152,7 @@
         }
 
         .verified-badge { color: var(--verified-color); font-size: 1rem; }
-        .loop-title { font-size: 0.95rem; color: #f0f2f5; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.3; }
+        .loop-title { font-size: 0.95rem; color: #f0f2f5; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.3; word-break: break-word; }
 
         .actions-right {
             position: absolute;
@@ -161,7 +161,7 @@
             z-index: 5;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             align-items: center;
         }
 
@@ -419,7 +419,7 @@
     <!-- USERNAME MODAL -->
     <div id="onboarding-modal" class="modal">
         <div class="modal-content">
-            <div class="logo"><span class="logo-icon">∞</span> ymt Loops</div>
+            <div class="logo"><span class="logo-icon">∞</span> YMT Loops</div>
             <h2>Willkommen!</h2>
             <p style="font-size: 0.85rem; color: #aaa;">Wähle deinen Usernamen:</p>
             <input type="text" id="setup-username" placeholder="z. B. ymtmanuel...">
@@ -428,7 +428,7 @@
     </div>
 
     <header>
-        <div class="logo"><span class="logo-icon">∞</span> ymt</div>
+        <div class="logo"><span class="logo-icon">∞</span> YMT Loops</div>
         <span id="current-user-display" style="font-size: 0.85rem; color: #aaa; font-weight: 600;"></span>
     </header>
 
@@ -443,7 +443,7 @@
         <div class="grid-container" id="explore-grid"></div>
     </div>
 
-    <!-- 3. POSTFACH VIEW (MODERATION ZENTRALE FÜR @ymtmanuel) -->
+    <!-- 3. POSTFACH VIEW -->
     <div id="postfach-view" class="app-view">
         <div class="view-header">📥 Postfach & Meldungen</div>
         <div style="padding: 16px;" id="postfach-content">
@@ -484,7 +484,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Max. ~800 KB. Dein Upload wird gescannt (Dauer bis zu 48 Std.).</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Dateien werden automatisch komprimiert. Upload wird geprüft (ca. 48 Std.).</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -586,7 +586,6 @@
             }
         }
 
-        // TON UMSCHALTEN (FIX FÜR HANDY-AUDIO)
         function toggleAudio(btn, videoId) {
             const video = document.getElementById(videoId);
             if (!video) return;
@@ -595,7 +594,7 @@
             showToast(video.muted ? "Ton aus 🔇" : "Ton an 🔊", "normal");
         }
 
-        // FEED LADEN
+        // FEED LADEN & VIDEO SCROLL-AUTO-PAUSE
         function loadFeed() {
             const feedContainer = document.getElementById("feed-view");
             db.collection("loops")
@@ -611,7 +610,7 @@
                 snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
                 docs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
-                docs.forEach((data, index) => {
+                docs.forEach((data) => {
                     const likesList = data.likesList || [];
                     const hasLiked = likesList.includes(currentUser);
                     const comments = data.comments || [];
@@ -621,7 +620,7 @@
                     const videoElemId = `feed-video-${data.id}`;
 
                     const mediaElement = isVideo 
-                        ? `<video id="${videoElemId}" src="${data.url}" autoplay muted loop playsinline></video>`
+                        ? `<video id="${videoElemId}" src="${data.url}" muted loop playsinline preload="auto"></video>`
                         : `<img src="${data.url}" class="post-img" alt="Foto" />`;
 
                     const card = document.createElement("div");
@@ -644,6 +643,10 @@
                                 <div class="action-icon-btn">💬</div>
                                 <span>${comments.length}</span>
                             </button>
+                            <button class="action-item" onclick="downloadWithWatermark('${data.url}', '${data.type}', '${escapeHtml(data.username)}')">
+                                <div class="action-icon-btn">💾</div>
+                                <span>Download</span>
+                            </button>
                             <button class="action-item" onclick="reportContent('post', '${data.id}', '${escapeHtml(data.title)}')">
                                 <div class="action-icon-btn">🚩</div>
                                 <span>Melden</span>
@@ -657,10 +660,78 @@
                     `;
                     feedContainer.appendChild(card);
                 });
+
+                setupVideoScrollObserver();
             });
         }
 
-        // ENTDECKEN TAB GRID
+        function setupVideoScrollObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                        video.play().catch(() => {});
+                    } else {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
+                });
+            }, { threshold: 0.6 });
+
+            document.querySelectorAll('.loop-card video').forEach(video => {
+                observer.observe(video);
+            });
+        }
+
+        // DOWNLOAD MIT WASSERZEICHEN
+        async function downloadWithWatermark(url, type, authorName) {
+            showToast("Bereite Download mit Wasserzeichen vor...", "normal");
+
+            if (type === 'image') {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+
+                    // Bild zeichnen
+                    ctx.drawImage(img, 0, 0);
+
+                    // Wasserzeichen Text
+                    const fontSize = Math.max(18, Math.floor(canvas.width * 0.035));
+                    ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
+                    const text = `YMT Loops • @${authorName}`;
+                    const textWidth = ctx.measureText(text).width;
+
+                    // Dunkles Banner
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+                    ctx.fillRect(canvas.width - textWidth - 30, canvas.height - fontSize - 30, textWidth + 20, fontSize + 15);
+
+                    // Neon Text
+                    ctx.fillStyle = "#00ff88";
+                    ctx.fillText(text, canvas.width - textWidth - 20, canvas.height - 20);
+
+                    // Herunterladen
+                    const a = document.createElement('a');
+                    a.download = `ymt_loop_${Date.now()}.jpg`;
+                    a.href = canvas.toDataURL('image/jpeg', 0.9);
+                    a.click();
+                    showToast("Download gestartet! 💾", "success");
+                };
+                img.src = url;
+            } else {
+                // Direkter Download für Videos mit automatischem Dateinamen
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ymt_loop_@${authorName}.mp4`;
+                a.target = "_blank";
+                a.click();
+                showToast("Download gestartet! 💾", "success");
+            }
+        }
+
         function loadExploreGrid() {
             const grid = document.getElementById("explore-grid");
             db.collection("loops").where("status", "==", "approved").get().then(snapshot => {
@@ -684,7 +755,6 @@
             });
         }
 
-        // PROFIL VIEW
         function loadProfileView() {
             const grid = document.getElementById("profile-grid");
             const postCountEl = document.getElementById("prof-count-posts");
@@ -712,16 +782,13 @@
             });
         }
 
-        // POSTFACH & MODERATION (Speziell angepasst für @ymtmanuel)
         async function loadPostfachView() {
             const container = document.getElementById("postfach-content");
             container.innerHTML = '<p style="color:#666;">Lade Postfach...</p>';
 
-            // WENN BIST DU BIST (@ymtmanuel):
             if (currentUser === "ymtmanuel") {
                 let html = '<h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>';
 
-                // 1. Ausstehende Posts
                 const pendingSnap = await db.collection("loops").where("status", "==", "pending").get();
                 html += `<h4>Ausstehende Uploads (${pendingSnap.size}):</h4><br>`;
                 
@@ -743,7 +810,6 @@
                     });
                 }
 
-                // 2. Gemeldete Inhalte
                 const reportsSnap = await db.collection("reports").get();
                 html += `<h4 style="margin-top:15px;">Gemeldete Inhalte (${reportsSnap.size}):</h4><br>`;
 
@@ -768,7 +834,6 @@
 
                 container.innerHTML = html;
             } else {
-                // FÜR NORMALE USER:
                 const myPendingSnap = await db.collection("loops")
                     .where("username", "==", currentUser)
                     .where("status", "==", "pending")
@@ -797,7 +862,6 @@
             }
         }
 
-        // ADMIN AKTIONEN
         async function approvePost(docId) {
             await db.collection("loops").doc(docId).update({ status: "approved" });
             showToast("Post freigegeben! ✅", "success");
@@ -823,7 +887,6 @@
             loadPostfachView();
         }
 
-        // MELDEN-FUNKTION
         async function reportContent(targetType, targetId, contentSummary) {
             if (!currentUser) return showToast("Bitte erst anmelden!", "error");
             
@@ -904,7 +967,7 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // UPLOAD MEDIA
+        // UPLOAD MEDIA MIT AUTOMATISCHER KOMPRIMIERUNG
         function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
@@ -922,23 +985,60 @@
                 return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            const MAX_SIZE = 800 * 1024;
-            if (file.size > MAX_SIZE) {
-                return showToast("Datei zu groß! Max. 0.8 MB.", "error");
+            showToast("Komprimiere & Verarbeite... ⏳", "normal");
+
+            if (isImage) {
+                // Bild im Browser komprimieren
+                compressImage(file, (compressedBase64) => {
+                    saveToFirestore(rawTitle, compressedBase64, "image");
+                });
+            } else {
+                // Video verarbeiten
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    saveToFirestore(rawTitle, e.target.result, "video");
+                };
+                reader.readAsDataURL(file);
             }
+        }
 
-            showToast("Verarbeite Datei... ⏳", "normal");
-
+        // BILD-KOMPRIMIERUNG PER CANVAS
+        function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                saveToFirestore(rawTitle, e.target.result, isVideo ? "video" : "image");
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const maxDim = 1000; // Maximale Auflösung für schnelle Ladezeiten
+
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Komprimieren mit Quality 0.7
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    callback(compressedDataUrl);
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
 
         async function saveToFirestore(title, url, type) {
             try {
-                // Auto-Approval für @ymtmanuel, sonst pending
                 const initialStatus = (currentUser === "ymtmanuel") ? "approved" : "pending";
 
                 await db.collection("loops").add({
@@ -953,7 +1053,7 @@
                 });
 
                 if (initialStatus === "approved") {
-                    showToast("Direkt veröffentlich! 🚀", "success");
+                    showToast("Direkt veröffentlicht! 🚀", "success");
                 } else {
                     showToast("Eingereicht! Wird gescannt ⏳", "success");
                 }
@@ -962,7 +1062,7 @@
                 document.getElementById("video-title").value = "";
                 document.getElementById("video-file").value = "";
             } catch (err) {
-                showToast("Fehler beim Speichern!", "error");
+                showToast("Fehler beim Speichern (Datei evtl. zu groß)!", "error");
             }
         }
 
