@@ -349,7 +349,7 @@
             background: rgba(11, 12, 16, 0.92);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex; justify-space-around: fill; align-items: center;
+            display: flex; justify-content: space-around; align-items: center;
             z-index: 200;
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -1036,15 +1036,17 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG & UPLOAD
+        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG MIT TON
         async function compressVideoFile(file) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const video = document.createElement('video');
                 video.src = URL.createObjectURL(file);
-                video.muted = true;
+                video.muted = false; // Ton aktivieren für die Extraktion
+                video.volume = 1.0;
                 
                 video.onloadeddata = async () => {
                     await video.play();
+
                     const canvas = document.createElement('canvas');
                     
                     // Skaliere Auflösung für max. Komprimierung (max. 480p Höhe)
@@ -1053,20 +1055,55 @@
                     canvas.height = (video.videoHeight * scale) || 640;
 
                     const ctx = canvas.getContext('2d');
-                    const stream = canvas.captureStream(24);
+                    const canvasStream = canvas.captureStream(24); // 24 FPS
+                    
+                    // Kombinierter Stream (Bild + Ton)
+                    const combinedStream = new MediaStream();
+                    
+                    // 1. Videospur vom Canvas hinzufügen
+                    canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
 
-                    let recorder;
-                    const options = { videoBitsPerSecond: 400000 }; // Low Bitrate (400 kbps)
+                    // 2. Audiospur lautlos extrahieren & hinzufügen
+                    let audioCtx;
                     try {
-                        recorder = new MediaRecorder(stream, { ...options, mimeType: 'video/webm' });
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const source = audioCtx.createMediaElementSource(video);
+                        const dest = audioCtx.createMediaStreamDestination();
+                        
+                        // Nur mit dem Ziel-Stream verbinden, nicht mit den Lautsprechern
+                        source.connect(dest);
+                        
+                        const audioTrack = dest.stream.getAudioTracks()[0];
+                        if (audioTrack) {
+                            combinedStream.addTrack(audioTrack);
+                        }
                     } catch(e) {
-                        recorder = new MediaRecorder(stream);
+                        console.warn("Audio konnte nicht extrahiert werden:", e);
+                    }
+
+                    // 3. MediaRecorder mit Bild & Ton initialisieren
+                    let recorder;
+                    const options = { 
+                        videoBitsPerSecond: 400000, // Low Bitrate für Video (ca. 400 kbps)
+                        audioBitsPerSecond: 64000   // Sparsame Bitrate für Ton (64 kbps)
+                    };
+
+                    try {
+                        recorder = new MediaRecorder(combinedStream, { ...options, mimeType: 'video/webm' });
+                    } catch(e) {
+                        try {
+                            recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+                        } catch(e2) {
+                            recorder = new MediaRecorder(combinedStream);
+                        }
                     }
 
                     const chunks = [];
                     recorder.ondataavailable = e => chunks.push(e.data);
                     
                     recorder.onstop = () => {
+                        if (audioCtx) audioCtx.close();
+                        URL.revokeObjectURL(video.src);
                         const blob = new Blob(chunks, { type: 'video/webm' });
                         resolve(blob);
                     };
@@ -1084,6 +1121,8 @@
 
                     processFrame();
                 };
+
+                video.onerror = (err) => reject(err);
             });
         }
 
@@ -1160,7 +1199,7 @@
                 });
 
                 if (initialStatus === "approved") {
-                    showToast("Direkt veröffenlicht! 🚀", "success");
+                    showToast("Direkt veröffentlicht! 🚀", "success");
                 } else {
                     showToast("Eingereicht! Wird gescannt ⏳", "success");
                 }
