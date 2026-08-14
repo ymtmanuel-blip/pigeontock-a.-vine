@@ -91,13 +91,13 @@
             height: 100vh;
             margin: 0 auto;
             display: none;
-            padding-bottom: 0; /* Auf 0 gesetzt für calc() im Feed */
+            padding-bottom: 0;
             overflow-y: auto;
         }
 
         .app-view.active { display: block; }
 
-        /* Feed Tab - Exakt an Höhe ohne Nav-Bar gebunden */
+        /* Feed Tab */
         #feed-view {
             height: calc(100vh - 65px);
             scroll-snap-type: y mandatory;
@@ -133,7 +133,6 @@
             background: #000;
         }
 
-        /* REPARIERTES ALIGNMENT DIREKT ÜBER DER NAV-LEISTE */
         .loop-info {
             position: absolute;
             bottom: 15px;
@@ -216,7 +215,6 @@
         .action-icon-btn:active { transform: scale(0.9); }
         .action-icon-btn.liked { background: rgba(255, 51, 102, 0.4); border-color: var(--danger-color); color: var(--danger-color); }
 
-        /* Explore & Profile Grid */
         .view-header {
             padding: 70px 20px 15px 20px;
             font-size: 1.3rem;
@@ -255,7 +253,6 @@
             border-radius: 4px;
         }
 
-        /* Profile Header */
         .profile-card {
             padding: 80px 20px 20px 20px;
             text-align: center;
@@ -279,7 +276,6 @@
         .stat-val { font-weight: 800; font-size: 1.1rem; }
         .stat-lbl { font-size: 0.75rem; color: #888; }
 
-        /* Comments Drawer */
         .comments-drawer {
             position: fixed;
             bottom: 0; left: 50%;
@@ -332,7 +328,6 @@
             background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem;
         }
 
-        /* Admin Storage Meter & Moderation */
         .storage-meter-card {
             background: rgba(0,0,0,0.4);
             border: 1px solid var(--border-color);
@@ -365,19 +360,33 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Postfach Styling */
+        /* Postfach Styling mit Schließen-Button */
         .inbox-card {
             background: rgba(22,24,34,0.6);
             border: 1px solid var(--border-color);
             border-radius: 14px;
             padding: 14px;
             margin-bottom: 12px;
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
+            position: relative;
         }
+
+        .inbox-close-btn {
+            position: absolute;
+            top: 10px; right: 12px;
+            background: rgba(255,255,255,0.1);
+            border: none; color: #fff;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; cursor: pointer;
+        }
+        .inbox-close-btn:hover { background: rgba(255, 51, 102, 0.5); }
 
         .inbox-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 
-        /* Nav Bar */
         nav.tiktok-nav {
             position: fixed;
             bottom: 0; left: 50%;
@@ -386,7 +395,7 @@
             background: rgba(11, 12, 16, 0.95);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex; justify-space-around; align-items: center;
+            display: flex; justify-content: space-around; align-items: center;
             z-index: 200;
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -863,15 +872,11 @@
 
             db.collection("loops").where("username", "==", currentUser).get().then(snapshot => {
                 grid.innerHTML = "";
-                postCountEl.innerText = snapshot.size;
-
-                if (snapshot.empty) {
-                    grid.innerHTML = '<p style="padding:20px; color:#666; grid-column: span 3;">Du hast noch nichts hochgeladen.</p>';
-                    return;
-                }
-
+                
+                let approvedCount = 0;
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    if(data.status === "approved") approvedCount++;
                     const isVideo = data.type === "video";
                     const item = document.createElement("div");
                     item.className = "grid-item";
@@ -881,6 +886,12 @@
                     `;
                     grid.appendChild(item);
                 });
+
+                postCountEl.innerText = approvedCount;
+
+                if (snapshot.empty) {
+                    grid.innerHTML = '<p style="padding:20px; color:#666; grid-column: span 3;">Du hast noch nichts hochgeladen.</p>';
+                }
             });
         }
 
@@ -976,28 +987,47 @@
 
                 container.innerHTML = html;
             } else {
-                const myPendingSnap = await db.collection("loops")
+                /* NORMALE USER POSTFACH-ANSICHT */
+                const myLoopsSnap = await db.collection("loops")
                     .where("username", "==", currentUser)
-                    .where("status", "==", "pending")
                     .get();
 
                 let html = '<h3>Deine Upload-Benachrichtigungen</h3><br>';
+                let hasNotifications = false;
                 
-                if (myPendingSnap.empty) {
-                    html += '<p style="color:#aaa; font-size:0.9rem;">Keine aktiven Überprüfungen. Alle deine Posts sind freigeschaltet!</p>';
-                } else {
-                    myPendingSnap.forEach(doc => {
-                        const d = doc.data();
+                myLoopsSnap.forEach(doc => {
+                    const d = doc.data();
+
+                    // Ausstehende Prüfung
+                    if (d.status === "pending") {
+                        hasNotifications = true;
                         html += `
                             <div class="inbox-card" style="border-color:var(--verified-color);">
                                 <div style="font-weight:bold;">⏳ In Prüfung: "${escapeHtml(d.title)}"</div>
                                 <p style="font-size:0.8rem; color:#ccc; margin-top:4px;">
-                                    Bitte warten. Dein Beitrag wird gescannt & geprüft.<br>
+                                    Bitte warten. Dein Beitrag wird geprüft.<br>
                                     <strong>Bearbeitungszeit: ca. 48 Stunden.</strong>
                                 </p>
                             </div>
                         `;
-                    });
+                    } 
+                    // Abgelehnte Posts mit Grund
+                    else if (d.status === "rejected") {
+                        hasNotifications = true;
+                        html += `
+                            <div class="inbox-card" style="border-color:var(--danger-color); background: rgba(255, 51, 102, 0.1);">
+                                <button class="inbox-close-btn" title="Benachrichtigung löschen" onclick="deleteNotification('${doc.id}')">✕</button>
+                                <div style="font-weight:bold; color:var(--danger-color);">❌ Abgelehnt: "${escapeHtml(d.title)}"</div>
+                                <p style="font-size:0.85rem; color:#f0f2f5; margin-top:4px;">
+                                    <strong>Grund:</strong> ${escapeHtml(d.rejectReason || "Kein Grund angegeben.")}
+                                </p>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (!hasNotifications) {
+                    html += '<p style="color:#aaa; font-size:0.9rem;">Keine aktiven Benachrichtigungen. Alle deine Posts sind freigeschaltet!</p>';
                 }
 
                 container.innerHTML = html;
@@ -1056,10 +1086,29 @@
             loadPostfachView();
         }
 
+        /* NEU: Ablehnen mit Begründung */
         async function rejectPost(docId) {
-            await db.collection("loops").doc(docId).delete();
-            showToast("Post abgelehnt & gelöscht ❌", "normal");
-            loadPostfachView();
+            const reason = prompt("Gib eine Begründung ein, warum der Beitrag abgelehnt wird:", "Entspricht nicht den Community-Richtlinien.");
+            
+            if (reason !== null) { // Wenn nicht abgebrochen wurde
+                await db.collection("loops").doc(docId).update({ 
+                    status: "rejected",
+                    rejectReason: reason.trim() || "Kein Grund angegeben."
+                });
+                showToast("Post abgelehnt & Grund an User gesendet! ❌", "normal");
+                loadPostfachView();
+            }
+        }
+
+        /* NEU: User entfernt abgelehnte Nachricht per X-Button */
+        async function deleteNotification(docId) {
+            try {
+                await db.collection("loops").doc(docId).delete();
+                showToast("Benachrichtigung entfernt 🗑️", "normal");
+                loadPostfachView();
+            } catch(e) {
+                showToast("Fehler beim Löschen!", "error");
+            }
         }
 
         async function deletePost(postId, reportId) {
