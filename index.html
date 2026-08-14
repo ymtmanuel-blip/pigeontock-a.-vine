@@ -132,39 +132,55 @@
             background: #000;
         }
 
+        /* REPARIERTES ALIGNMENT FÜR TITEL UND ACTIONS */
         .loop-info {
-            position: relative;
-            z-index: 2;
-            padding: 20px;
-            padding-right: 80px; 
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            position: absolute;
+            bottom: 75px;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            padding: 20px 75px 15px 16px; 
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            padding-bottom: 90px;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .loop-info * {
+            pointer-events: auto;
         }
 
         .loop-author {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             gap: 6px;
             color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
         }
 
-        .verified-badge { color: var(--verified-color); font-size: 1rem; }
-        .loop-title { font-size: 0.95rem; color: #f0f2f5; text-shadow: 0 1px 3px rgba(0,0,0,0.8); line-height: 1.3; word-break: break-word; }
+        .verified-badge { color: var(--verified-color); font-size: 0.95rem; }
+        
+        .loop-title { 
+            font-size: 0.9rem; 
+            color: #f0f2f5; 
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8); 
+            line-height: 1.35; 
+            word-break: break-word; 
+            max-height: 120px;
+            overflow-y: auto;
+        }
 
         .actions-right {
             position: absolute;
-            right: 16px;
-            bottom: 100px;
-            z-index: 5;
+            right: 12px;
+            bottom: 85px;
+            z-index: 12;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -172,31 +188,32 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             background: none;
             border: none;
             color: #fff;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             cursor: pointer;
             text-shadow: 0 1px 4px rgba(0,0,0,0.8);
         }
 
         .action-icon-btn {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1.1rem;
+            border: 1px solid rgba(255,255,255,0.25);
             transition: transform 0.1s;
         }
         .action-icon-btn:active { transform: scale(0.9); }
-        .action-icon-btn.liked { background: rgba(255, 51, 102, 0.3); border-color: var(--danger-color); color: var(--danger-color); }
+        .action-icon-btn.liked { background: rgba(255, 51, 102, 0.4); border-color: var(--danger-color); color: var(--danger-color); }
 
         /* Explore & Profile Grid */
         .view-header {
@@ -279,7 +296,7 @@
         .comments-header {
             padding: 14px 20px;
             border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-space-between; align-items: center;
             font-weight: 600;
         }
 
@@ -364,7 +381,7 @@
             bottom: 0; left: 50%;
             transform: translateX(-50%);
             width: 100%; max-width: 500px; height: 65px;
-            background: rgba(11, 12, 16, 0.92);
+            background: rgba(11, 12, 16, 0.95);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
             display: flex; justify-content: space-around; align-items: center;
@@ -581,7 +598,6 @@
             if (!currentUser) {
                 openModal('onboarding-modal');
             } else {
-                // Ban-Check durchführen
                 const isBanned = await checkIfBanned(currentUser);
                 if (isBanned) {
                     alert("Dein Account wurde dauerhaft gebannt.");
@@ -725,7 +741,6 @@
             });
         }
 
-        // WASSERZEICHEN ZENTRIERT (FOTOS & VIDEOS)
         async function downloadWithWatermark(url, type, authorName) {
             showToast("Bereite Download mit Wasserzeichen vor...", "normal");
 
@@ -867,22 +882,20 @@
             });
         }
 
-        // ADMIN-PANEL + SPEICHER-ANZEIGE + BAN + MODERATION
         async function loadPostfachView() {
             const container = document.getElementById("postfach-content");
             container.innerHTML = '<p style="color:#666;">Lade Postfach...</p>';
 
             if (currentUser === "ymtmanuel") {
-                // Berechne Speicherverbrauch aller Posts
                 const allLoopsSnap = await db.collection("loops").get();
                 let totalBytes = 0;
                 allLoopsSnap.forEach(doc => {
                     const data = doc.data();
-                    if (data.url) totalBytes += data.url.length; // Approximate Base64 size
+                    if (data.url) totalBytes += data.url.length;
                 });
 
                 const usedMB = (totalBytes / (1024 * 1024)).toFixed(2);
-                const limitMB = 1000; // 1 GB kostenloses Firebase Kontingent
+                const limitMB = 1000;
                 const percent = Math.min(100, ((usedMB / limitMB) * 100)).toFixed(1);
 
                 let html = `
@@ -896,7 +909,6 @@
                         </div>
                     </div>
 
-                    <!-- 1. USER BANNEN SECTION -->
                     <div class="admin-section">
                         <h4 style="color:var(--danger-color); margin-bottom:8px;">🚫 User dauerhaft bannen</h4>
                         <div style="display:flex; gap:8px;">
@@ -908,7 +920,6 @@
                     <h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>
                 `;
 
-                // 2. AUSSTEHENDE UPLOADS MIT MEDIEN-VORSCHAU PRÜFEN
                 const pendingSnap = await db.collection("loops").where("status", "==", "pending").get();
                 html += `<h4>Ausstehende Uploads (${pendingSnap.size}):</h4><br>`;
                 
@@ -926,10 +937,7 @@
                             <div class="inbox-card">
                                 <div><strong>@${escapeHtml(d.username)}</strong>: ${escapeHtml(d.title)}</div>
                                 <div style="font-size:0.75rem; color:#aaa;">Typ: ${d.type}</div>
-                                
-                                <!-- UPLOAD VORSCHAU -->
                                 ${mediaPreviewHtml}
-
                                 <div class="inbox-actions">
                                     <button class="btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
                                     <button class="btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="rejectPost('${doc.id}')">Als anstößig löschen ❌</button>
@@ -939,7 +947,6 @@
                     });
                 }
 
-                // 3. GEMELDETE INHALTE (POSTS & KOMMENTARE LÖSCHEN)
                 const reportsSnap = await db.collection("reports").get();
                 html += `<h4 style="margin-top:15px;">Gemeldete Inhalte (${reportsSnap.size}):</h4><br>`;
 
@@ -995,7 +1002,6 @@
             }
         }
 
-        // FUNKTION: USER BANNERN
         async function adminBanUser() {
             const input = document.getElementById("ban-user-input");
             const targetUsername = input.value.trim().toLowerCase();
@@ -1017,7 +1023,6 @@
             }
         }
 
-        // FUNKTION: GEMELDETEN KOMMENTAR LÖSCHEN
         async function deleteReportedComment(postId, commentSummary, reportId) {
             if (confirm("Möchtest du diesen Kommentar wirklich löschen?")) {
                 try {
@@ -1026,7 +1031,6 @@
 
                     if (doc.exists) {
                         const comments = doc.data().comments || [];
-                        // Kommentar basierend auf dem gepackten Text filtern
                         const updatedComments = comments.filter(c => {
                             const fullText = `${c.user}: ${c.text}`;
                             return fullText !== commentSummary;
@@ -1149,7 +1153,6 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG & UPLOAD
         async function compressVideoFile(file) {
             return new Promise((resolve) => {
                 const video = document.createElement('video');
@@ -1160,7 +1163,6 @@
                     await video.play();
                     const canvas = document.createElement('canvas');
                     
-                    // Skaliere Auflösung für max. Komprimierung (max. 480p Höhe)
                     const scale = Math.min(1, 480 / video.videoHeight);
                     canvas.width = (video.videoWidth * scale) || 480;
                     canvas.height = (video.videoHeight * scale) || 640;
@@ -1169,7 +1171,7 @@
                     const stream = canvas.captureStream(24);
 
                     let recorder;
-                    const options = { videoBitsPerSecond: 400000 }; // Low Bitrate (400 kbps)
+                    const options = { videoBitsPerSecond: 400000 };
                     try {
                         recorder = new MediaRecorder(stream, { ...options, mimeType: 'video/webm' });
                     } catch(e) {
@@ -1239,10 +1241,9 @@
                 }
             } else {
                 try {
-                    // Video Komprimieren
                     const compressedBlob = await compressVideoFile(file);
                     
-                    if (compressedBlob.size > 720 * 1024) { // Prüfen ob > 720 KB
+                    if (compressedBlob.size > 720 * 1024) {
                         showToast("Video ist trotz Komprimierung etwas zu lang!", "error");
                     }
 
