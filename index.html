@@ -13,6 +13,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
+    <!-- Bild-Komprimierungs-Bibliothek (Client-side API) -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
+
     <style>
         :root {
             --bg-color: #0b0c10;
@@ -344,7 +347,7 @@
             background: rgba(11, 12, 16, 0.92);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; align-items: center;
+            display: flex; justify-space-around: fill; align-items: center;
             z-index: 200;
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -353,7 +356,7 @@
             background: none; border: none;
             color: #777; font-size: 0.75rem; font-weight: 600;
             display: flex; flex-direction: column; align-items: center; gap: 3px;
-            cursor: pointer; transition: color 0.2s;
+            cursor: pointer; transition: color 0.2s; flex: 1;
         }
         .nav-item.active, .nav-item:hover { color: #fff; }
         .nav-icon { font-size: 1.3rem; }
@@ -484,7 +487,7 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Neuer Post</h2>
-            <p style="font-size: 0.8rem; color: #aaa;">Dateien werden automatisch komprimiert. Upload wird geprüft (ca. 48 Std.).</p>
+            <p style="font-size: 0.8rem; color: #aaa;">Dateien werden automatisch optimiert & komprimiert.</p>
             <input type="text" id="video-title" placeholder="Titel / Beschreibung...">
             <input type="file" id="video-file" accept="image/*,video/*">
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
@@ -594,7 +597,7 @@
             showToast(video.muted ? "Ton aus 🔇" : "Ton an 🔊", "normal");
         }
 
-        // FEED LADEN & VIDEO SCROLL-AUTO-PAUSE
+        // FEED LADEN & SCROLL OBSERVER
         function loadFeed() {
             const feedContainer = document.getElementById("feed-view");
             db.collection("loops")
@@ -683,7 +686,7 @@
             });
         }
 
-        // DOWNLOAD MIT WASSERZEICHEN
+        // DOWNLOAD MIT WASSERZEICHEN IN DER MITTE (FOTOS & VIDEOS)
         async function downloadWithWatermark(url, type, authorName) {
             showToast("Bereite Download mit Wasserzeichen vor...", "normal");
 
@@ -699,36 +702,90 @@
                     // Bild zeichnen
                     ctx.drawImage(img, 0, 0);
 
-                    // Wasserzeichen Text
-                    const fontSize = Math.max(18, Math.floor(canvas.width * 0.035));
-                    ctx.font = `bold ${fontSize}px Outfit, sans-serif`;
-                    const text = `YMT Loops • @${authorName}`;
-                    const textWidth = ctx.measureText(text).width;
+                    // Wasserzeichen in der Mitte (Halbtransparent & Dezent)
+                    const fontSize = Math.max(22, Math.floor(canvas.width * 0.05));
+                    ctx.font = `800 ${fontSize}px Outfit, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
 
-                    // Dunkles Banner
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-                    ctx.fillRect(canvas.width - textWidth - 30, canvas.height - fontSize - 30, textWidth + 20, fontSize + 15);
+                    // Schlagschatten für Lesbarkeit
+                    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+                    ctx.shadowBlur = 12;
 
-                    // Neon Text
-                    ctx.fillStyle = "#00ff88";
-                    ctx.fillText(text, canvas.width - textWidth - 20, canvas.height - 20);
+                    // Dezent helles, leicht transparentes Weiß
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+                    ctx.fillText(`YMT Loops • @${authorName}`, canvas.width / 2, canvas.height / 2);
 
                     // Herunterladen
                     const a = document.createElement('a');
-                    a.download = `ymt_loop_${Date.now()}.jpg`;
+                    a.download = `ymt_loop_@${authorName}_${Date.now()}.jpg`;
                     a.href = canvas.toDataURL('image/jpeg', 0.9);
                     a.click();
-                    showToast("Download gestartet! 💾", "success");
+                    showToast("Foto heruntergeladen! 💾", "success");
                 };
                 img.src = url;
             } else {
-                // Direkter Download für Videos mit automatischem Dateinamen
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `ymt_loop_@${authorName}.mp4`;
-                a.target = "_blank";
-                a.click();
-                showToast("Download gestartet! 💾", "success");
+                // VIDEO WASSERZEICHEN RENDERN PER CANVAS & MEDIARECORDER
+                showToast("Rendere Video mit Wasserzeichen... ⏳", "normal");
+
+                const tempVid = document.createElement('video');
+                tempVid.src = url;
+                tempVid.crossOrigin = "anonymous";
+                tempVid.muted = true;
+                tempVid.currentTime = 0;
+
+                tempVid.onloadeddata = async () => {
+                    await tempVid.play();
+                    const canvas = document.createElement('canvas');
+                    canvas.width = tempVid.videoWidth || 720;
+                    canvas.height = tempVid.videoHeight || 1280;
+                    const ctx = canvas.getContext('2d');
+
+                    const stream = canvas.captureStream(30);
+                    let recorder;
+                    try {
+                        recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                    } catch(e) {
+                        recorder = new MediaRecorder(stream);
+                    }
+
+                    const chunks = [];
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    
+                    recorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'video/mp4' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `ymt_loop_@${authorName}.mp4`;
+                        a.click();
+                        showToast("Video heruntergeladen! 💾", "success");
+                    };
+
+                    recorder.start();
+
+                    function drawFrame() {
+                        if (tempVid.paused || tempVid.ended) {
+                            recorder.stop();
+                            return;
+                        }
+                        ctx.drawImage(tempVid, 0, 0, canvas.width, canvas.height);
+
+                        // Wasserzeichen genau in der Mitte
+                        const fontSize = Math.max(22, Math.floor(canvas.width * 0.05));
+                        ctx.font = `800 ${fontSize}px Outfit, sans-serif`;
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+
+                        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+                        ctx.shadowBlur = 10;
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+                        ctx.fillText(`YMT Loops • @${authorName}`, canvas.width / 2, canvas.height / 2);
+
+                        requestAnimationFrame(drawFrame);
+                    }
+
+                    drawFrame();
+                };
             }
         }
 
@@ -967,8 +1024,8 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // UPLOAD MEDIA MIT AUTOMATISCHER KOMPRIMIERUNG
-        function uploadMedia() {
+        // UPLOAD MEDIA MIT KOMPRIMIERUNGS-LIB / API
+        async function uploadMedia() {
             const titleInput = document.getElementById("video-title");
             const fileInput = document.getElementById("video-file");
             const rawTitle = titleInput.value.trim();
@@ -985,13 +1042,33 @@
                 return showToast("Nur Bilder oder Videos erlaubt!", "error");
             }
 
-            showToast("Komprimiere & Verarbeite... ⏳", "normal");
+            showToast("Komprimiere & Verarbeite Datei... ⏳", "normal");
 
             if (isImage) {
-                // Bild im Browser komprimieren
-                compressImage(file, (compressedBase64) => {
-                    saveToFirestore(rawTitle, compressedBase64, "image");
-                });
+                try {
+                    // Erweiterte Komprimierung via 'browser-image-compression' API/Library
+                    const options = {
+                        maxSizeMB: 0.5,             // Max. 500 KB Zielgröße
+                        maxWidthOrHeight: 1080,     // Max. HD Auflösung
+                        useWebWorker: true          // Verhindert Lags beim Rendern
+                    };
+                    const compressedFile = await imageCompression(file, options);
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        saveToFirestore(rawTitle, e.target.result, "image");
+                    };
+                    reader.readAsDataURL(compressedFile);
+
+                } catch (error) {
+                    showToast("Fehler bei Komprimierung, wende Fallback an...", "error");
+                    // Fallback falls die Library fehlschlägt
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        saveToFirestore(rawTitle, e.target.result, "image");
+                    };
+                    reader.readAsDataURL(file);
+                }
             } else {
                 // Video verarbeiten
                 const reader = new FileReader();
@@ -1000,41 +1077,6 @@
                 };
                 reader.readAsDataURL(file);
             }
-        }
-
-        // BILD-KOMPRIMIERUNG PER CANVAS
-        function compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-                    const maxDim = 1000; // Maximale Auflösung für schnelle Ladezeiten
-
-                    if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height = Math.round((height * maxDim) / width);
-                            width = maxDim;
-                        } else {
-                            width = Math.round((width * maxDim) / height);
-                            height = maxDim;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Komprimieren mit Quality 0.7
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                    callback(compressedDataUrl);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
         }
 
         async function saveToFirestore(title, url, type) {
