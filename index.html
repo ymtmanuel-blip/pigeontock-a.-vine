@@ -91,21 +91,22 @@
             height: 100vh;
             margin: 0 auto;
             display: none;
-            padding-bottom: 70px;
+            padding-bottom: 0; /* Auf 0 gesetzt für calc() im Feed */
             overflow-y: auto;
         }
 
         .app-view.active { display: block; }
 
-        /* Feed Tab */
+        /* Feed Tab - Exakt an Höhe ohne Nav-Bar gebunden */
         #feed-view {
+            height: calc(100vh - 65px);
             scroll-snap-type: y mandatory;
             overflow-y: scroll;
         }
 
         .loop-card {
             width: 100%;
-            height: 100vh;
+            height: calc(100vh - 65px);
             scroll-snap-align: start;
             scroll-snap-stop: always;
             position: relative;
@@ -132,18 +133,18 @@
             background: #000;
         }
 
-        /* REPARIERTES ALIGNMENT FÜR TITEL UND ACTIONS */
+        /* REPARIERTES ALIGNMENT DIREKT ÜBER DER NAV-LEISTE */
         .loop-info {
             position: absolute;
-            bottom: 75px;
+            bottom: 15px;
             left: 0;
             width: 100%;
             z-index: 10;
-            padding: 20px 75px 15px 16px; 
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+            padding: 15px 75px 10px 16px; 
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%);
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             pointer-events: none;
         }
 
@@ -176,7 +177,7 @@
         .actions-right {
             position: absolute;
             right: 12px;
-            bottom: 85px;
+            bottom: 20px;
             z-index: 12;
             display: flex;
             flex-direction: column;
@@ -228,6 +229,7 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 2px;
             padding: 2px;
+            padding-bottom: 70px;
         }
 
         .grid-item {
@@ -296,7 +298,7 @@
         .comments-header {
             padding: 14px 20px;
             border-bottom: 1px solid var(--border-color);
-            display: flex; justify-space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             font-weight: 600;
         }
 
@@ -384,7 +386,7 @@
             background: rgba(11, 12, 16, 0.95);
             backdrop-filter: blur(16px);
             border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; align-items: center;
+            display: flex; justify-space-around; align-items: center;
             z-index: 200;
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -485,7 +487,7 @@
     <!-- 3. POSTFACH VIEW -->
     <div id="postfach-view" class="app-view">
         <div class="view-header">📥 Postfach & Admin</div>
-        <div style="padding: 16px;" id="postfach-content">
+        <div style="padding: 16px; padding-bottom: 80px;" id="postfach-content">
             <p style="color:#666;">Lade Nachrichtencenter...</p>
         </div>
     </div>
