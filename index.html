@@ -313,7 +313,7 @@
             background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem;
         }
 
-        /* Admin Storage Meter */
+        /* Admin Storage Meter & Moderation */
         .storage-meter-card {
             background: rgba(0,0,0,0.4);
             border: 1px solid var(--border-color);
@@ -328,6 +328,24 @@
             height: 100%; background: linear-gradient(90deg, #00ff88, #00d2ff); width: 0%; transition: width 0.5s ease;
         }
 
+        .admin-section {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .admin-preview-media {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #000;
+            margin: 8px 0;
+            border: 1px solid var(--border-color);
+        }
+
         /* Postfach Styling */
         .inbox-card {
             background: rgba(22,24,34,0.6);
@@ -338,7 +356,7 @@
             display: flex; flex-direction: column; gap: 8px;
         }
 
-        .inbox-actions { display: flex; gap: 8px; margin-top: 6px; }
+        .inbox-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 
         /* Nav Bar */
         nav.tiktok-nav {
@@ -559,9 +577,28 @@
             if (viewId === 'postfach-view') loadPostfachView();
         }
 
-        function initUserSystem() {
-            if (!currentUser) openModal('onboarding-modal');
-            else updateUserUI();
+        async function initUserSystem() {
+            if (!currentUser) {
+                openModal('onboarding-modal');
+            } else {
+                // Ban-Check durchführen
+                const isBanned = await checkIfBanned(currentUser);
+                if (isBanned) {
+                    alert("Dein Account wurde dauerhaft gebannt.");
+                    document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh; color:#ff3366; font-weight:bold; font-size:1.2rem; text-align:center; padding:20px;">🚫 Dein Account wurde dauerhaft gebannt.</div>';
+                    return;
+                }
+                updateUserUI();
+            }
+        }
+
+        async function checkIfBanned(username) {
+            try {
+                const doc = await db.collection("bannedUsers").doc(username.toLowerCase()).get();
+                return doc.exists;
+            } catch(e) {
+                return false;
+            }
         }
 
         function updateUserUI() {
@@ -575,6 +612,9 @@
             if (!input) return showToast("Bitte Username eingeben!", "error");
 
             try {
+                const isBanned = await checkIfBanned(input);
+                if (isBanned) return showToast("Dieser Username ist gebannt!", "error");
+
                 const doc = await db.collection("usernames").doc(input).get();
                 if (doc.exists) return showToast("Username vergeben!", "error");
 
@@ -827,7 +867,7 @@
             });
         }
 
-        // ADMIN-PANEL + SPEICHER-ANZEIGE
+        // ADMIN-PANEL + SPEICHER-ANZEIGE + BAN + MODERATION
         async function loadPostfachView() {
             const container = document.getElementById("postfach-content");
             container.innerHTML = '<p style="color:#666;">Lade Postfach...</p>';
@@ -847,7 +887,7 @@
 
                 let html = `
                     <div class="storage-meter-card">
-                        <div style="display:flex; justify-space-between; font-weight:bold; font-size:0.85rem;">
+                        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.85rem;">
                             <span>📊 Firebase Speicherbelegung:</span>
                             <span style="color:var(--accent-color);">${usedMB} MB / ${limitMB} MB (${percent}%)</span>
                         </div>
@@ -855,9 +895,20 @@
                             <div class="storage-bar-fill" style="width: ${percent}%;"></div>
                         </div>
                     </div>
+
+                    <!-- 1. USER BANNEN SECTION -->
+                    <div class="admin-section">
+                        <h4 style="color:var(--danger-color); margin-bottom:8px;">🚫 User dauerhaft bannen</h4>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="ban-user-input" placeholder="Usernamen eingeben..." style="font-size:0.85rem; padding:8px 12px;">
+                            <button class="btn-danger" style="padding:8px 12px; font-size:0.85rem;" onclick="adminBanUser()">Bannen</button>
+                        </div>
+                    </div>
+
                     <h3 style="margin-bottom:12px; color:var(--accent-color);">🛡️ Admin Moderation</h3>
                 `;
 
+                // 2. AUSSTEHENDE UPLOADS MIT MEDIEN-VORSCHAU PRÜFEN
                 const pendingSnap = await db.collection("loops").where("status", "==", "pending").get();
                 html += `<h4>Ausstehende Uploads (${pendingSnap.size}):</h4><br>`;
                 
@@ -866,19 +917,29 @@
                 } else {
                     pendingSnap.forEach(doc => {
                         const d = doc.data();
+                        const isVideo = d.type === "video";
+                        const mediaPreviewHtml = isVideo 
+                            ? `<video src="${d.url}" class="admin-preview-media" controls></video>`
+                            : `<img src="${d.url}" class="admin-preview-media" alt="Vorschau" />`;
+
                         html += `
                             <div class="inbox-card">
                                 <div><strong>@${escapeHtml(d.username)}</strong>: ${escapeHtml(d.title)}</div>
                                 <div style="font-size:0.75rem; color:#aaa;">Typ: ${d.type}</div>
+                                
+                                <!-- UPLOAD VORSCHAU -->
+                                ${mediaPreviewHtml}
+
                                 <div class="inbox-actions">
-                                    <button class="btn-primary" style="padding:4px 10px; font-size:0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
-                                    <button class="btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="rejectPost('${doc.id}')">Ablehnen ❌</button>
+                                    <button class="btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approvePost('${doc.id}')">Freigeben ✅</button>
+                                    <button class="btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="rejectPost('${doc.id}')">Als anstößig löschen ❌</button>
                                 </div>
                             </div>
                         `;
                     });
                 }
 
+                // 3. GEMELDETE INHALTE (POSTS & KOMMENTARE LÖSCHEN)
                 const reportsSnap = await db.collection("reports").get();
                 html += `<h4 style="margin-top:15px;">Gemeldete Inhalte (${reportsSnap.size}):</h4><br>`;
 
@@ -887,14 +948,17 @@
                 } else {
                     reportsSnap.forEach(doc => {
                         const r = doc.data();
+                        const isComment = r.targetType === 'comment';
+
                         html += `
                             <div class="inbox-card" style="border-color:var(--danger-color);">
                                 <div style="color:var(--danger-color); font-weight:bold;">🚩 Meldung (${r.targetType})</div>
                                 <div style="font-size:0.85rem;">Inhalt: "${escapeHtml(r.contentSummary)}"</div>
                                 <div style="font-size:0.75rem; color:#aaa;">Gemeldet von: @${escapeHtml(r.reportedBy)}</div>
                                 <div class="inbox-actions">
-                                    ${r.targetType === 'post' ? `<button class="btn-danger" style="padding:4px 10px; font-size:0.8rem;" onclick="deletePost('${r.targetId}', '${doc.id}')">Post Löschen 🗑️</button>` : ''}
-                                    <button class="btn-secondary" style="padding:4px 10px; font-size:0.8rem;" onclick="dismissReport('${doc.id}')">Ignorieren 👁️</button>
+                                    ${r.targetType === 'post' ? `<button class="btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="deletePost('${r.targetId}', '${doc.id}')">Post Löschen 🗑️</button>` : ''}
+                                    ${isComment ? `<button class="btn-danger" style="padding:6px 12px; font-size:0.8rem;" onclick="deleteReportedComment('${r.targetId}', '${escapeHtml(r.contentSummary)}', '${doc.id}')">Kommentar Löschen 🗑️</button>` : ''}
+                                    <button class="btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="dismissReport('${doc.id}')">Meldung Ignorieren 👁️</button>
                                 </div>
                             </div>
                         `;
@@ -928,6 +992,55 @@
                 }
 
                 container.innerHTML = html;
+            }
+        }
+
+        // FUNKTION: USER BANNERN
+        async function adminBanUser() {
+            const input = document.getElementById("ban-user-input");
+            const targetUsername = input.value.trim().toLowerCase();
+
+            if (!targetUsername) return showToast("Bitte Usernamen eingeben!", "error");
+            if (targetUsername === "ymtmanuel") return showToast("Du kannst dich nicht selbst bannen!", "error");
+
+            if (confirm(`Möchtest du "@${targetUsername}" wirklich dauerhaft bannen?`)) {
+                try {
+                    await db.collection("bannedUsers").doc(targetUsername).set({
+                        bannedBy: currentUser,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast(`User @${targetUsername} wurde gebannt! 🚫`, "success");
+                    input.value = "";
+                } catch(e) {
+                    showToast("Fehler beim Bannen!", "error");
+                }
+            }
+        }
+
+        // FUNKTION: GEMELDETEN KOMMENTAR LÖSCHEN
+        async function deleteReportedComment(postId, commentSummary, reportId) {
+            if (confirm("Möchtest du diesen Kommentar wirklich löschen?")) {
+                try {
+                    const docRef = db.collection("loops").doc(postId);
+                    const doc = await docRef.get();
+
+                    if (doc.exists) {
+                        const comments = doc.data().comments || [];
+                        // Kommentar basierend auf dem gepackten Text filtern
+                        const updatedComments = comments.filter(c => {
+                            const fullText = `${c.user}: ${c.text}`;
+                            return fullText !== commentSummary;
+                        });
+
+                        await docRef.update({ comments: updatedComments });
+                    }
+
+                    await db.collection("reports").doc(reportId).delete();
+                    showToast("Kommentar gelöscht! 🗑️", "success");
+                    loadPostfachView();
+                } catch(e) {
+                    showToast("Fehler beim Löschen des Kommentars!", "error");
+                }
             }
         }
 
@@ -1036,17 +1149,15 @@
             showToast("Kommentar gesendet! 💬", "success");
         }
 
-        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG MIT TON
+        // BROWSER-BASIERTE VIDEO-KOMPRIMIERUNG & UPLOAD
         async function compressVideoFile(file) {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const video = document.createElement('video');
                 video.src = URL.createObjectURL(file);
-                video.muted = false; // Ton aktivieren für die Extraktion
-                video.volume = 1.0;
+                video.muted = true;
                 
                 video.onloadeddata = async () => {
                     await video.play();
-
                     const canvas = document.createElement('canvas');
                     
                     // Skaliere Auflösung für max. Komprimierung (max. 480p Höhe)
@@ -1055,55 +1166,20 @@
                     canvas.height = (video.videoHeight * scale) || 640;
 
                     const ctx = canvas.getContext('2d');
-                    const canvasStream = canvas.captureStream(24); // 24 FPS
-                    
-                    // Kombinierter Stream (Bild + Ton)
-                    const combinedStream = new MediaStream();
-                    
-                    // 1. Videospur vom Canvas hinzufügen
-                    canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
+                    const stream = canvas.captureStream(24);
 
-                    // 2. Audiospur lautlos extrahieren & hinzufügen
-                    let audioCtx;
-                    try {
-                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        const source = audioCtx.createMediaElementSource(video);
-                        const dest = audioCtx.createMediaStreamDestination();
-                        
-                        // Nur mit dem Ziel-Stream verbinden, nicht mit den Lautsprechern
-                        source.connect(dest);
-                        
-                        const audioTrack = dest.stream.getAudioTracks()[0];
-                        if (audioTrack) {
-                            combinedStream.addTrack(audioTrack);
-                        }
-                    } catch(e) {
-                        console.warn("Audio konnte nicht extrahiert werden:", e);
-                    }
-
-                    // 3. MediaRecorder mit Bild & Ton initialisieren
                     let recorder;
-                    const options = { 
-                        videoBitsPerSecond: 400000, // Low Bitrate für Video (ca. 400 kbps)
-                        audioBitsPerSecond: 64000   // Sparsame Bitrate für Ton (64 kbps)
-                    };
-
+                    const options = { videoBitsPerSecond: 400000 }; // Low Bitrate (400 kbps)
                     try {
-                        recorder = new MediaRecorder(combinedStream, { ...options, mimeType: 'video/webm' });
+                        recorder = new MediaRecorder(stream, { ...options, mimeType: 'video/webm' });
                     } catch(e) {
-                        try {
-                            recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
-                        } catch(e2) {
-                            recorder = new MediaRecorder(combinedStream);
-                        }
+                        recorder = new MediaRecorder(stream);
                     }
 
                     const chunks = [];
                     recorder.ondataavailable = e => chunks.push(e.data);
                     
                     recorder.onstop = () => {
-                        if (audioCtx) audioCtx.close();
-                        URL.revokeObjectURL(video.src);
                         const blob = new Blob(chunks, { type: 'video/webm' });
                         resolve(blob);
                     };
@@ -1121,8 +1197,6 @@
 
                     processFrame();
                 };
-
-                video.onerror = (err) => reject(err);
             });
         }
 
